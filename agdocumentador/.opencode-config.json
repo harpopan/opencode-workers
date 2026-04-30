@@ -1,0 +1,17 @@
+{
+  "project": "agdocumentador",
+  "version": "1.0.0",
+  "defaultTheme": "theme-documentators",
+  "output": {
+    "docs": "/docs_ocode/"
+  },
+  "agents": {
+    "explorer": ".agents/agents/explorer/AGENT.md",
+    "writer": ".agents/agents/writer/AGENT.md",
+    "diagrams": ".agents/agents/diagrams/AGENT.md"
+  },
+  "skills": {
+    "documentation": ".agents/skills/documentation/SKILL.md",
+    "mermaid-diagrams": ".agents/skills/mermaid-diagrams/SKILL.md"
+  }
+}

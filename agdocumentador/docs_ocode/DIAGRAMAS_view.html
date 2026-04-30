@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentación — Samjoko Lector</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --bg-card: #161b22;
+      --bg-code: #1e2530;
+      --bg-soft: #0f141a;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --ok: #3fb950;
+      --warn: #d29922;
+      --err: #f85149;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --text-head: #f0f6fc;
+      --radius: 10px;
+      --font-sans: 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      --max-width: 1480px;
+    }
+
+    body.theme-light {
+      --bg: #f6f8fa;
+      --bg-card: #ffffff;
+      --bg-code: #f1f5f9;
+      --bg-soft: #eef2f7;
+      --border: #d0d7de;
+      --accent: #0969da;
+      --ok: #1a7f37;
+      --warn: #9a6700;
+      --err: #cf222e;
+      --text: #1f2328;
+      --text-muted: #57606a;
+      --text-head: #0b0f14;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: color-mix(in oklab, var(--bg) 90%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 220px;
+    }
+
+    .brand .logo {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-head);
+      letter-spacing: -0.3px;
+    }
+
+    .brand .logo span { color: var(--accent); }
+
+    .badge {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .toolbar input[type="search"] {
+      width: min(360px, 48vw);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      outline: none;
+    }
+
+    .toolbar input[type="search"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 20%, transparent);
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: 140ms ease;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      color: var(--text-head);
+    }
+
+    .layout {
+      max-width: var(--max-width);
+      margin: 18px auto 0;
+      padding: 0 14px 80px;
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    aside {
+      position: sticky;
+      top: 72px;
+      align-self: start;
+      max-height: calc(100vh - 88px);
+      overflow: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+
+    .toc-title {
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .toc-list a {
+      display: block;
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 7px 9px;
+      font-size: 0.86rem;
+      line-height: 1.3;
+    }
+
+    .toc-list a:hover,
+    .toc-list a.active {
+      border-color: var(--border);
+      background: var(--bg-soft);
+      color: var(--text-head);
+    }
+
+    .toc-list .lvl-3 a {
+      padding-left: 20px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    main {
+      min-width: 0;
+    }
+
+    #estado {
+      text-align: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 56px 16px;
+      color: var(--text-muted);
+    }
+
+    #estado.error { color: var(--err); }
+
+    #estado .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 14px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    #contenido h1 {
+      font-size: 2rem;
+      color: var(--text-head);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 10px;
+      margin: 0 0 22px;
+    }
+
+    #contenido h2 {
+      font-size: 1.28rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin: 42px 0 18px;
+      scroll-margin-top: 82px;
+    }
+
+    #contenido h3 {
+      font-size: 1.04rem;
+      color: var(--text-head);
+      margin: 20px 0 10px;
+      scroll-margin-top: 82px;
+    }
+
+    #contenido p { margin: 0 0 14px; }
+    #contenido strong { color: var(--text-head); }
+    #contenido em { color: var(--text-muted); }
+
+    #contenido a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    #contenido a:hover { text-decoration: underline; }
+
+    #contenido hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 28px 0;
+    }
+
+    #contenido code {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: var(--font-mono);
+      font-size: 0.84em;
+      color: var(--text-head);
+    }
+
+    #contenido pre {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: 0 0 18px;
+    }
+
+    #contenido pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--text-head);
+    }
+
+    #contenido table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 24px;
+      font-size: 0.88rem;
+    }
+
+    #contenido th, #contenido td {
+      border: 1px solid var(--border);
+      padding: 9px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    #contenido thead th {
+      background: var(--bg-code);
+      color: var(--text-head);
+    }
+
+    #contenido tbody tr:nth-child(even) {
+      background: color-mix(in oklab, var(--bg-card) 86%, var(--bg-soft));
+    }
+
+    #contenido ul, #contenido ol { padding-left: 20px; margin-bottom: 14px; }
+
+    .section-hidden { display: none !important; }
+
+    mark {
+      background: color-mix(in oklab, var(--warn) 45%, transparent);
+      color: inherit;
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+
+    .mermaid-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 0 0 26px;
+      overflow: hidden;
+    }
+
+    .diagram-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in oklab, var(--bg-card) 70%, var(--bg-soft));
+    }
+
+    .diagram-toolbar .left,
+    .diagram-toolbar .right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .diagram-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .status {
+      border-radius: 999px;
+      padding: 2px 8px;
+      border: 1px solid var(--border);
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .status.ok { color: var(--ok); border-color: color-mix(in oklab, var(--ok) 50%, var(--border)); }
+    .status.err { color: var(--err); border-color: color-mix(in oklab, var(--err) 50%, var(--border)); }
+
+    .diagram-btn {
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      border-radius: 7px;
+      padding: 4px 8px;
+      font-size: 0.74rem;
+      cursor: pointer;
+    }
+
+    .diagram-btn:hover { border-color: var(--accent); }
+
+    .mermaid-canvas {
+      padding: 18px 10px 20px;
+      overflow-x: auto;
+      text-align: center;
+    }
+
+    .mermaid-canvas svg { max-width: 100%; height: auto; }
+
+    .diag-error {
+      margin: 10px;
+      border: 1px solid color-mix(in oklab, var(--err) 40%, var(--border));
+      background: color-mix(in oklab, var(--err) 12%, transparent);
+      color: var(--err);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.8rem;
+      text-align: left;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .footer-note {
+      margin-top: 30px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    @media (max-width: 1040px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: static; max-height: none; }
+      .toolbar { justify-content: flex-start; }
+      header { grid-template-columns: 1fr; }
+      .brand { min-width: 0; }
+      .toolbar input[type="search"] { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">Samjoko <span>Docs</span></div>
+      <div class="badge">DOCUMENTACION.md</div>
+    </div>
+
+    <div class="toolbar">
+      <input id="searchInput" type="search" placeholder="Buscar sección o texto..." />
+      <button class="btn" id="btnReload">Recargar</button>
+      <button class="btn" id="btnRerender">Re-render Mermaid</button>
+      <button class="btn" id="btnTheme">Tema</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="toc-title">Contenido</div>
+      <ul class="toc-list" id="toc"></ul>
+    </aside>
+
+    <main>
+      <div id="estado">
+        <div class="spinner"></div>
+        Cargando documentación...
+      </div>
+
+      <div id="stats" hidden></div>
+      <div id="contenido" hidden></div>
+      <div class="footer-note">Viewer Markdown + Mermaid · compatible con Mermaid 11+</div>
+    </main>
+  </div>
+
+  <script>
+    const estadoEl = document.getElementById('estado');
+    const contenidoEl = document.getElementById('contenido');
+    const tocEl = document.getElementById('toc');
+    const statsEl = document.getElementById('stats');
+    const searchInput = document.getElementById('searchInput');
+    const btnReload = document.getElementById('btnReload');
+    const btnRerender = document.getElementById('btnRerender');
+    const btnTheme = document.getElementById('btnTheme');
+
+    let mermaidCounter = 0;
+    let renderStats = { total: 0, ok: 0, error: 0, ms: 0 };
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      securityLevel: 'loose',
+      themeVariables: {
+        background: '#161b22',
+        primaryColor: '#1e2530',
+        primaryTextColor: '#c9d1d9',
+        primaryBorderColor: '#30363d',
+        lineColor: '#58a6ff',
+        edgeLabelBackground: '#161b22',
+        fontSize: '14px'
+      }
+    });
+
+    marked.setOptions({
+      gfm: true,
+      breaks: false
+    });
+
+    const renderer = new marked.Renderer();
+
+    renderer.code = function(code, lang) {
+      const tokenLike = (typeof code === 'object' && code !== null) ? code : null;
+      const tokenLang = tokenLike && typeof tokenLike.lang === 'string' ? tokenLike.lang : '';
+      const legacyLang = (typeof lang === 'string') ? lang : '';
+      const language = (tokenLang || legacyLang || '').trim().toLowerCase();
+
+      const source = tokenLike && typeof tokenLike.text === 'string'
+        ? tokenLike.text
+        : (typeof code === 'string' ? code : '');
+
+      if (language.startsWith('mermaid')) {
+        const idx = ++mermaidCounter;
+        return buildMermaidBlock(source, idx);
+      }
+
+      return `<pre><code>${escapeHtml(source)}</code></pre>`;
+    };
+
+    function buildMermaidBlock(source, index) {
+      const safe = escapeHtml(source);
+      return `
+        <div class="mermaid-wrapper" data-raw-source="${encodeURIComponent(source)}">
+          <div class="diagram-toolbar">
+            <div class="left">
+              <span class="diagram-label">diagrama #${index}</span>
+              <span class="status" data-role="status">PENDIENTE</span>
+            </div>
+            <div class="right">
+              <button class="diagram-btn" data-action="copy">Copiar Mermaid</button>
+              <button class="diagram-btn" data-action="svg">Descargar SVG</button>
+            </div>
+          </div>
+          <div class="diag-error" data-role="error"></div>
+          <div class="mermaid-canvas">
+            <div class="mermaid">${safe}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function seemsMermaidBlock(text) {
+      const first = (text || '').trim().split('\n')[0]?.trim() || '';
+      return /^(flowchart|graph|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie)/i.test(first);
+    }
+
+    function ensureMermaidBlocks(root) {
+      const codeBlocks = root.querySelectorAll('pre > code');
+      codeBlocks.forEach((codeEl) => {
+        const className = (codeEl.className || '').toLowerCase();
+        const raw = codeEl.textContent || '';
+        const isMermaidClass = className.includes('language-mermaid') || className.includes('lang-mermaid');
+        const isMermaidByContent = seemsMermaidBlock(raw);
+        if (!isMermaidClass && !isMermaidByContent) return;
+
+        const pre = codeEl.parentElement;
+        if (!pre || !pre.parentElement) return;
+
+        const idx = ++mermaidCounter;
+        const holder = document.createElement('div');
+        holder.innerHTML = buildMermaidBlock(raw, idx);
+        pre.parentElement.replaceChild(holder.firstElementChild, pre);
+      });
+    }
+
+    function slugify(text) {
+      return (text || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-');
+    }
+
+    function assignHeadingIds() {
+      const used = new Map();
+      const headings = contenidoEl.querySelectorAll('h2, h3');
+      headings.forEach((h) => {
+        let base = slugify(h.textContent);
+        if (!base) base = 'seccion';
+        const count = (used.get(base) || 0) + 1;
+        used.set(base, count);
+        h.id = count > 1 ? `${base}-${count}` : base;
+      });
+    }
+
+    function buildTOC() {
+      tocEl.innerHTML = '';
+      const headings = contenidoEl.querySelectorAll('h2, h3');
+      headings.forEach((h) => {
+        const li = document.createElement('li');
+        li.className = h.tagName.toLowerCase() === 'h3' ? 'lvl-3' : 'lvl-2';
+
+        const a = document.createElement('a');
+        a.href = `#${h.id}`;
+        a.textContent = h.textContent;
+        li.appendChild(a);
+        tocEl.appendChild(li);
+      });
+    }
+
+    function updateActiveTOC() {
+      const links = tocEl.querySelectorAll('a');
+      let activeId = '';
+      const tops = Array.from(contenidoEl.querySelectorAll('h2, h3'))
+        .map((h) => ({ id: h.id, top: h.getBoundingClientRect().top }))
+        .filter((item) => item.top <= 130);
+
+      if (tops.length) activeId = tops[tops.length - 1].id;
+      links.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === `#${activeId}`));
+    }
+
+    function clearMarks() {
+      contenidoEl.querySelectorAll('mark[data-search]').forEach((m) => {
+        const text = document.createTextNode(m.textContent);
+        m.parentNode.replaceChild(text, m);
+      });
+    }
+
+    function markInElement(el, query) {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach((node) => {
+        const text = node.nodeValue;
+        const idx = text.toLowerCase().indexOf(query);
+        if (idx < 0) return;
+
+        const before = text.slice(0, idx);
+        const match = text.slice(idx, idx + query.length);
+        const after = text.slice(idx + query.length);
+
+        const frag = document.createDocumentFragment();
+        if (before) frag.appendChild(document.createTextNode(before));
+
+        const mark = document.createElement('mark');
+        mark.dataset.search = '1';
+        mark.textContent = match;
+        frag.appendChild(mark);
+
+        if (after) frag.appendChild(document.createTextNode(after));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    function filterSections(queryRaw) {
+      const query = queryRaw.trim().toLowerCase();
+      clearMarks();
+
+      const h2s = Array.from(contenidoEl.querySelectorAll('h2'));
+      if (!query) {
+        h2s.forEach((h2) => {
+          let cur = h2;
+          while (cur && cur !== h2.nextElementSibling) {
+            cur.classList.remove('section-hidden');
+            cur = cur.nextElementSibling;
+            if (cur && cur.tagName === 'H2') break;
+          }
+          h2.classList.remove('section-hidden');
+        });
+
+        Array.from(contenidoEl.children).forEach((node) => node.classList.remove('section-hidden'));
+        return;
+      }
+
+      let firstVisibleHeading = null;
+      h2s.forEach((h2) => {
+        const sectionNodes = [h2];
+        let node = h2.nextElementSibling;
+        while (node && node.tagName !== 'H2') {
+          sectionNodes.push(node);
+          node = node.nextElementSibling;
+        }
+
+        const sectionText = sectionNodes.map((n) => n.textContent || '').join(' ').toLowerCase();
+        const match = sectionText.includes(query);
+
+        sectionNodes.forEach((n) => n.classList.toggle('section-hidden', !match));
+        if (match && !firstVisibleHeading) firstVisibleHeading = h2;
+
+        if (match) {
+          markInElement(h2, query);
+          sectionNodes.slice(1).forEach((n) => {
+            if (n.tagName === 'P' || n.tagName === 'LI' || n.tagName === 'TD') {
+              markInElement(n, query);
+            }
+          });
+        }
+      });
+
+      if (firstVisibleHeading) {
+        firstVisibleHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    async function renderAllMermaid() {
+      const wrappers = Array.from(contenidoEl.querySelectorAll('.mermaid-wrapper'));
+      renderStats = { total: wrappers.length, ok: 0, error: 0, ms: 0 };
+      const t0 = performance.now();
+
+      wrappers.forEach((w) => {
+        const status = w.querySelector('[data-role="status"]');
+        const error = w.querySelector('[data-role="error"]');
+        if (status) {
+          status.textContent = 'PROCESANDO';
+          status.classList.remove('ok', 'err');
+        }
+        if (error) {
+          error.style.display = 'none';
+          error.textContent = '';
+        }
+      });
+
+      await mermaid.run({ querySelector: '.mermaid' });
+
+      wrappers.forEach((w) => {
+        const status = w.querySelector('[data-role="status"]');
+        const error = w.querySelector('[data-role="error"]');
+        const svg = w.querySelector('svg');
+
+        if (svg) {
+          renderStats.ok += 1;
+          if (status) {
+            status.textContent = 'OK';
+            status.classList.add('ok');
+          }
+        } else {
+          renderStats.error += 1;
+          if (status) {
+            status.textContent = 'ERROR';
+            status.classList.add('err');
+          }
+          if (error) {
+            error.style.display = 'block';
+            error.textContent = 'No se pudo renderizar este diagrama. Revisa sintaxis Mermaid.';
+          }
+        }
+      });
+
+      renderStats.ms = Math.round(performance.now() - t0);
+      renderStatsPanel();
+    }
+
+    function renderStatsPanel() {
+      statsEl.hidden = false;
+      statsEl.innerHTML = `
+        <div class="chip">diagramas:${renderStats.total}</div>
+        <div class="chip">ok:${renderStats.ok}</div>
+        <div class="chip">error:${renderStats.error}</div>
+        <div class="chip">render:${renderStats.ms}ms</div>
+      `;
+    }
+
+    function wireDiagramTools() {
+      contenidoEl.querySelectorAll('.mermaid-wrapper').forEach((wrapper) => {
+        const source = decodeURIComponent(wrapper.dataset.rawSource || '');
+        const btnCopy = wrapper.querySelector('[data-action="copy"]');
+        const btnSvg = wrapper.querySelector('[data-action="svg"]');
+
+        if (btnCopy) {
+          btnCopy.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText(source);
+              btnCopy.textContent = 'Copiado';
+              setTimeout(() => { btnCopy.textContent = 'Copiar Mermaid'; }, 1000);
+            } catch {
+              btnCopy.textContent = 'Sin permiso';
+              setTimeout(() => { btnCopy.textContent = 'Copiar Mermaid'; }, 1000);
+            }
+          });
+        }
+
+        if (btnSvg) {
+          btnSvg.addEventListener('click', () => {
+            const svg = wrapper.querySelector('svg');
+            if (!svg) {
+              btnSvg.textContent = 'Sin SVG';
+              setTimeout(() => { btnSvg.textContent = 'Descargar SVG'; }, 1000);
+              return;
+            }
+
+            const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `diagrama-${Date.now()}.svg`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+          });
+        }
+      });
+    }
+
+    function applyTheme(theme) {
+      document.body.classList.toggle('theme-light', theme === 'light');
+      localStorage.setItem('viewer_theme', theme);
+      btnTheme.textContent = theme === 'light' ? 'Tema oscuro' : 'Tema claro';
+    }
+
+    async function cargarDocumentacion() {
+      estadoEl.classList.remove('error');
+      estadoEl.hidden = false;
+      estadoEl.innerHTML = '<div class="spinner"></div>Cargando documentación...';
+      contenidoEl.hidden = true;
+      statsEl.hidden = true;
+      tocEl.innerHTML = '';
+
+      try {
+        const respuesta = await fetch(`./DIAGRAMAS.md?t=${Date.now()}`);
+        if (!respuesta.ok) {
+          throw new Error(`HTTP ${respuesta.status}: no se pudo cargar DOCUMENTACION.md`);
+        }
+
+        const markdown = await respuesta.text();
+        mermaidCounter = 0;
+        const html = marked.parse(markdown, { renderer });
+        contenidoEl.innerHTML = html;
+
+        ensureMermaidBlocks(contenidoEl);
+        assignHeadingIds();
+        buildTOC();
+        wireDiagramTools();
+
+        estadoEl.hidden = true;
+        contenidoEl.hidden = false;
+
+        await renderAllMermaid();
+        updateActiveTOC();
+      } catch (err) {
+        estadoEl.classList.add('error');
+        estadoEl.innerHTML = `
+          <strong>Error al cargar la documentación</strong><br><br>
+          ${(err && err.message) ? err.message : 'Error desconocido'}<br><br>
+          <small>Comprueba el servidor local: python -m http.server 8000</small>
+        `;
+      }
+    }
+
+    btnReload.addEventListener('click', cargarDocumentacion);
+    btnRerender.addEventListener('click', async () => {
+      await renderAllMermaid();
+    });
+
+    btnTheme.addEventListener('click', () => {
+      const isLight = document.body.classList.contains('theme-light');
+      applyTheme(isLight ? 'dark' : 'light');
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      filterSections(e.target.value || '');
+      updateActiveTOC();
+    });
+
+    window.addEventListener('scroll', updateActiveTOC, { passive: true });
+
+    const initialTheme = localStorage.getItem('viewer_theme') || 'dark';
+    applyTheme(initialTheme);
+    cargarDocumentacion();
+  </script>
+</body>
+</html>
