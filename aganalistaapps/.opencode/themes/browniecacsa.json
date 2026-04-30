@@ -1,0 +1,241 @@
+{
+  "$schema": "https://opencode.ai/theme.json",
+  "defs": {
+    "camelLight": "#e8d9c4",
+    "camel": "#d8c2a8",
+    "camelDark": "#c4a98a",
+    "sandLight": "#f0e4cf",
+    "sand": "#e4d3b8",
+    "sandDark": "#d1bfa3",
+    "ivory": "#e9e2d6",
+    "bone": "#dcd3c6",
+    "amberLight": "#f6d59b",
+    "amber": "#eabf72",
+    "amberDark": "#d9a85a",
+    "coffeeLight": "#8b6f55",
+    "coffee": "#6e533c",
+    "coffeeDark": "#4a3626",
+    "cocoaLight": "#a27b5c",
+    "cocoa": "#8c6548",
+    "cocoaDark": "#5f4530",
+    "olive": "#b7c48b",
+    "oliveDark": "#9aa86e",
+    "terracotta": "#d88a6b",
+    "terracottaDark": "#c06f52",
+    "grayWarm10": "#f0eae3",
+    "grayWarm9": "#e3dbd2",
+    "grayWarm8": "#d6cdc2",
+    "grayWarm7": "#b8a99c",
+    "grayWarm6": "#8a7c70",
+    "grayWarm5": "#5f544c",
+    "grayWarm4": "#3f3833",
+    "grayWarm3": "#2e2926",
+    "grayWarm2": "#25211f",
+    "grayWarm1": "#1b1816",
+    "diffAddBg": "#2a3326",
+    "diffDeleteBg": "#3a2626",
+    "diffChangeBg": "#2e2926"
+  },
+  "theme": {
+    "primary": {
+      "dark": "camel",
+      "light": "camel"
+    },
+    "secondary": {
+      "dark": "amber",
+      "light": "amber"
+    },
+    "accent": {
+      "dark": "terracotta",
+      "light": "terracotta"
+    },
+    "error": {
+      "dark": "terracottaDark",
+      "light": "terracottaDark"
+    },
+    "warning": {
+      "dark": "amber",
+      "light": "amber"
+    },
+    "success": {
+      "dark": "olive",
+      "light": "olive"
+    },
+    "info": {
+      "dark": "camelLight",
+      "light": "camelLight"
+    },
+    "text": {
+      "dark": "ivory",
+      "light": "coffeeDark"
+    },
+    "textMuted": {
+      "dark": "grayWarm7",
+      "light": "grayWarm7"
+    },
+    "background": {
+      "dark": "grayWarm3",
+      "light": "sandLight"
+    },
+    "backgroundPanel": {
+      "dark": "grayWarm2",
+      "light": "sand"
+    },
+    "backgroundElement": {
+      "dark": "grayWarm4",
+      "light": "sandDark"
+    },
+    "border": {
+      "dark": "grayWarm1",
+      "light": "camelDark"
+    },
+    "borderActive": {
+      "dark": "amber",
+      "light": "amber"
+    },
+    "borderSubtle": {
+      "dark": "grayWarm6",
+      "light": "grayWarm6"
+    },
+    "diffAdded": {
+      "dark": "olive",
+      "light": "olive"
+    },
+    "diffRemoved": {
+      "dark": "terracotta",
+      "light": "terracotta"
+    },
+    "diffContext": {
+      "dark": "grayWarm7",
+      "light": "grayWarm7"
+    },
+    "diffHunkHeader": {
+      "dark": "coffeeLight",
+      "light": "coffeeLight"
+    },
+    "diffHighlightAdded": {
+      "dark": "oliveDark",
+      "light": "oliveDark"
+    },
+    "diffHighlightRemoved": {
+      "dark": "terracottaDark",
+      "light": "terracottaDark"
+    },
+    "diffAddedBg": {
+      "dark": "diffAddBg",
+      "light": "diffAddBg"
+    },
+    "diffRemovedBg": {
+      "dark": "diffDeleteBg",
+      "light": "diffDeleteBg"
+    },
+    "diffContextBg": {
+      "dark": "grayWarm5",
+      "light": "grayWarm5"
+    },
+    "diffLineNumber": {
+      "dark": "grayWarm6",
+      "light": "grayWarm6"
+    },
+    "diffAddedLineNumberBg": {
+      "dark": "diffAddBg",
+      "light": "diffAddBg"
+    },
+    "diffRemovedLineNumberBg": {
+      "dark": "diffDeleteBg",
+      "light": "diffDeleteBg"
+    },
+    "markdownText": {
+      "dark": "ivory",
+      "light": "coffeeDark"
+    },
+    "markdownHeading": {
+      "dark": "amber",
+      "light": "amber"
+    },
+    "markdownLink": {
+      "dark": "camelLight",
+      "light": "camelLight"
+    },
+    "markdownLinkText": {
+      "dark": "terracotta",
+      "light": "terracotta"
+    },
+    "markdownCode": {
+      "dark": "olive",
+      "light": "olive"
+    },
+    "markdownBlockQuote": {
+      "dark": "coffeeLight",
+      "light": "coffeeLight"
+    },
+    "markdownEmph": {
+      "dark": "ivory",
+      "light": "coffeeDark"
+    },
+    "markdownStrong": {
+      "dark": "ivory",
+      "light": "coffeeDark"
+    },
+    "markdownHorizontalRule": {
+      "dark": "grayWarm6",
+      "light": "grayWarm6"
+    },
+    "markdownListItem": {
+      "dark": "amber",
+      "light": "amber"
+    },
+    "markdownListEnumeration": {
+      "dark": "terracotta",
+      "light": "terracotta"
+    },
+    "markdownImage": {
+      "dark": "camel",
+      "light": "camel"
+    },
+    "markdownImageText": {
+      "dark": "terracotta",
+      "light": "terracotta"
+    },
+    "markdownCodeBlock": {
+      "dark": "ivory",
+      "light": "coffeeDark"
+    },
+    "syntaxComment": {
+      "dark": "grayWarm7",
+      "light": "grayWarm7"
+    },
+    "syntaxKeyword": {
+      "dark": "terracotta",
+      "light": "terracotta"
+    },
+    "syntaxFunction": {
+      "dark": "amber",
+      "light": "amber"
+    },
+    "syntaxVariable": {
+      "dark": "ivory",
+      "light": "coffeeDark"
+    },
+    "syntaxString": {
+      "dark": "olive",
+      "light": "olive"
+    },
+    "syntaxNumber": {
+      "dark": "amberDark",
+      "light": "amberDark"
+    },
+    "syntaxType": {
+      "dark": "camelLight",
+      "light": "camelLight"
+    },
+    "syntaxOperator": {
+      "dark": "terracotta",
+      "light": "terracotta"
+    },
+    "syntaxPunctuation": {
+      "dark": "grayWarm8",
+      "light": "grayWarm8"
+    }
+  }
+}
