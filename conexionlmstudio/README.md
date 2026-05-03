@@ -24,4 +24,4 @@ _To be defined based on project requirements._
 
 ## 📋 Technologies
 
-_To be defined based on project requirements._
+_To be defined based on project requirements._
