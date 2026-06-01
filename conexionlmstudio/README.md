@@ -1,27 +1,27 @@
-# Project Name
+# OpenCode + LM Studio — Conexión Local
 
-PWA web project. Details to be defined.
+Configuración de **OpenCode** conectado a **LM Studio** para ejecutar modelos de lenguaje de forma local y privada.
 
----
+## Requisitos
 
-## 🚀 Getting Started
+- LM Studio con servidor de API activo
+- Modelo `google/gemma-4-e4b` cargado en LM Studio
+- OpenCode instalado
 
-_Instructions to be added once the project purpose is defined._
+## Configuración
 
----
+Ver `opencode.json` (única fuente de verdad). La configuración apunta a:
 
-## 📁 Project Structure
+- **Server**: `http://scacnet.cacsa.eu:1234/v1`
+- **Modelo**: `google/gemma-4-e4b` (contexto 14096 tokens)
+- **Timeout**: 120s
+- **Reasoning**: activado (`reasoning_content`)
 
-_To be defined based on project requirements._
+## Documentación
 
----
-
-## 🛠️ Available Scripts
-
-_To be defined based on project requirements._
-
----
-
-## 📋 Technologies
-
-_To be defined based on project requirements._
+| Archivo | Propósito |
+|---------|-----------|
+| `opencode.json` | Configuración principal |
+| `GUIA_LMSTUDIO.md` | Guía detallada de LM Studio |
+| `AGENTS.md` | Instrucciones para el agente |
+| `ESTRUCTURA_PROYECTO.md` | Estructura de archivos |
