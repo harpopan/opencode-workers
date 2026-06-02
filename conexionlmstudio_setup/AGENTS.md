@@ -20,7 +20,7 @@ La unica fuente de verdad es `opencode.json`.
 
 ## Gestion de Contexto (Modelo Local)
 
-Dado que se utiliza **Gemma 4 E4B** con contexto limitado (`limit.context: 14096`), el agente DEBE seguir estas reglas:
+Dado que se utiliza **Qwen3.5-9B** (`limit.context: 50573`), el agente DEBE seguir estas reglas:
 
 1. **Planificacion Obligatoria**: Antes de cualquier ejecucion tecnica, desglosar la solicitud en tareas atomicas en `task.md`. Ninguna tarea debe abarcar mas de un componente logico a la vez.
 2. **Enfoque de Lectura Selectiva**: Evitar leer archivos completos si superan las 200 lineas. Usar lectura por rangos o `grep_search` para localizar fragmentos especificos.

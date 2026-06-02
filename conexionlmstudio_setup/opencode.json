@@ -7,22 +7,22 @@
       "options": {
         "baseURL": "http://scacnet.cacsa.eu:1234/v1",
         "apiKey": "lm-studio",
-        "timeout": 120000
+        "timeout": 300000
       },
       "models": {
-        "google/gemma-4-e4b": {
-          "name": "Gemma 4 E4B (local)",
+        "qwen3.5-9b": {
+          "name": "Qwen3.5-9b (local)",
           "reasoning": true,
           "interleaved": {
             "field": "reasoning_content"
           },
           "limit": {
-            "context": 14096,
-            "output": 8192
+            "context": 50573,
+            "output": 25286
           }
         }
       }
     }
   },
-  "model": "lmstudio/google/gemma-4-e4b"
+  "model": "lmstudio/qwen3.5-9b"
 }
