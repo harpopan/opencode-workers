@@ -19,7 +19,9 @@
 ├── servidorlogslmstudio.py   # Servidor web para logs (solo stdlib)
 ├── verlogs.sh                # Bash de arranque para servidor de logs
 ├── opencode.json             # Configuracion principal (single source of truth)
-├── .last_context             # Persistencia del ultimo contexto usado (no trackear)
+├── .gitignore                # Archivos de runtime (no trackear)
+├── .last_context             # Persistencia del ultimo contexto usado
+├── .last_reasoning           # Persistencia del ultimo valor de razonamiento
 └── tui.json                  # Tema de la interfaz de terminal
 ```
 

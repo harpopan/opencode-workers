@@ -5,6 +5,7 @@ LMSTUDIO_URL="http://scacnet.cacsa.eu:1234"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/opencode.json"
 CONTEXT_FILE="$SCRIPT_DIR/.last_context"
+REASONING_FILE="$SCRIPT_DIR/.last_reasoning"
 DEFAULT_CONTEXT=4096
 
 # Filtrar modelos duplicados con sufijo :N (ej: qwen3.5-9b:2)
@@ -90,6 +91,33 @@ echo "$CONTEXT_LENGTH" > "$CONTEXT_FILE"
 echo "Contexto: $CONTEXT_LENGTH tokens"
 echo ""
 
+# Cargar ultimo valor de reasoning
+if [ -f "$REASONING_FILE" ]; then
+  LAST_REASONING=$(cat "$REASONING_FILE")
+else
+  LAST_REASONING="si"
+fi
+
+# Preguntar reasoning
+read -p "Razonamiento (si/no, default $LAST_REASONING): " REASONING_INPUT
+if [ -z "$REASONING_INPUT" ]; then
+  REASONING_INPUT=$LAST_REASONING
+fi
+
+case "$REASONING_INPUT" in
+  si|s|yes|y|true|1)
+    REASONING=True
+    echo "si" > "$REASONING_FILE"
+    ;;
+  *)
+    REASONING=False
+    echo "no" > "$REASONING_FILE"
+    ;;
+esac
+
+echo "Razonamiento: $REASONING"
+echo ""
+
 # Calcular output maximo (mitad del contexto)
 OUTPUT_LENGTH=$((CONTEXT_LENGTH / 2))
 
@@ -102,20 +130,24 @@ import json
 with open('$CONFIG_FILE', 'r') as f:
     config = json.load(f)
 
-provider = config['provider']['lmstudio']
-provider['models'] = {
+model_conf = {
     '$SELECTED_MODEL': {
         'name': '$MODEL_NAME (local)',
-        'reasoning': True,
-        'interleaved': {
-            'field': 'reasoning_content'
-        },
+        'reasoning': $REASONING,
         'limit': {
             'context': $CONTEXT_LENGTH,
             'output': $OUTPUT_LENGTH
         }
     }
 }
+
+if $REASONING:
+    model_conf['$SELECTED_MODEL']['interleaved'] = {
+        'field': 'reasoning_content'
+    }
+
+provider = config['provider']['lmstudio']
+provider['models'] = model_conf
 
 config['model'] = 'lmstudio/$SELECTED_MODEL'
 

@@ -10,19 +10,16 @@
         "timeout": 300000
       },
       "models": {
-        "qwen3.5-9b": {
-          "name": "Qwen3.5-9b (local)",
-          "reasoning": true,
-          "interleaved": {
-            "field": "reasoning_content"
-          },
+        "qwen2.5-coder-7b-instruct": {
+          "name": "Qwen2.5-coder-7b-instruct (local)",
+          "reasoning": false,
           "limit": {
-            "context": 50573,
-            "output": 25286
+            "context": 16000,
+            "output": 8000
           }
         }
       }
     }
   },
-  "model": "lmstudio/qwen3.5-9b"
+  "model": "lmstudio/qwen2.5-coder-7b-instruct"
 }
