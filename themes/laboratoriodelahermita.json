@@ -1,0 +1,40 @@
+{
+  "$schema": "https://opencode.ai/theme.json",
+  "defs": {
+    "bg-primary": "#1a0a0a",
+    "bg-secondary": "#2d0a0a",
+    "bg-selection": "#4d0a0a",
+    "red": "#ff0000",
+    "red-light": "#ff4400",
+    "red-orange": "#ff8800",
+    "pink": "#ff66cc",
+    "orange": "#ffaa00",
+    "magenta": "#ff00ff"
+  },
+  "theme": {
+    "primary": "#ff5555",
+    "secondary": "#ff66cc",
+    "accent": "red",
+    "error": "red",
+    "warning": "red-orange",
+    "success": "#00ff00",
+    "info": "#555555",
+    "text": "#ff5555",
+    "textMuted": "#555555",
+    "background": "bg-primary",
+    "backgroundPanel": "bg-secondary",
+    "backgroundElement": "bg-selection",
+    "border": "#555555",
+    "borderActive": "#ff5555",
+    "borderSubtle": "#333333",
+    "syntaxComment": "#555555",
+    "syntaxKeyword": "red",
+    "syntaxFunction": "pink",
+    "syntaxVariable": "magenta",
+    "syntaxString": "red-light",
+    "syntaxNumber": "red-orange",
+    "syntaxType": "orange",
+    "syntaxOperator": "red",
+    "syntaxPunctuation": "#ff5555"
+  }
+}
