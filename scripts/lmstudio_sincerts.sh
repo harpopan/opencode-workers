@@ -1,0 +1,3 @@
+export NODE_TLS_REJECT_UNAUTHORIZED=0 
+./LM-Studio-0.4.12-1-x64.AppImage
+
