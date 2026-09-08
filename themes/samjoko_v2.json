@@ -1,0 +1,246 @@
+{
+  "$schema": "https://opencode.ai/theme.json",
+  "defs": {
+    "ember0": "#FCE2C8",
+    "ember1": "#F8C89A",
+    "ember2": "#F4A86A",
+    "ember3": "#F28A3A",
+    "ember4": "#E87528",
+    "ember5": "#D96A1F",
+    "ember6": "#B84F18",
+    "ember7": "#8C3A12",
+    "ember8": "#6A2A0E",
+    "ember9": "#3F1A08",
+
+    "ash0": "#F0EEEB",
+    "ash1": "#D8D4CF",
+    "ash2": "#B8B4AF",
+    "ash3": "#8A8783",
+    "ash4": "#6A6865",
+    "ash5": "#4A4947",
+
+    "bone0": "#EDE8E2",
+    "bone1": "#D7D2CC",
+    "bone2": "#C7C2BA",
+
+    "coal0": "#E0E0E0",
+    "coal1": "#C4C4C4",
+    "coal2": "#9A9A9A",
+    "coal3": "#6F6F6F",
+    "coal4": "#4A4A4A",
+    "coal5": "#2F2F2F",
+    "coal6": "#1F1F1F",
+    "coal7": "#181818",
+    "coal8": "#121212",
+    "coal9": "#0C0C0C"
+  },
+  "theme": {
+    "primary": {
+      "dark": "ember3",
+      "light": "ember3"
+    },
+    "secondary": {
+      "dark": "ember5",
+      "light": "ember5"
+    },
+    "accent": {
+      "dark": "ember1",
+      "light": "ember1"
+    },
+
+    "error": {
+      "dark": "ember7",
+      "light": "ember7"
+    },
+    "warning": {
+      "dark": "ember3",
+      "light": "ember3"
+    },
+    "success": {
+      "dark": "ash1",
+      "light": "ash1"
+    },
+    "info": {
+      "dark": "ember5",
+      "light": "ember5"
+    },
+
+    "text": {
+      "dark": "coal0",
+      "light": "coal9"
+    },
+    "textMuted": {
+      "dark": "coal3",
+      "light": "coal3"
+    },
+
+    "background": {
+      "dark": "coal7",
+      "light": "ash0"
+    },
+    "backgroundPanel": {
+      "dark": "coal8",
+      "light": "ash1"
+    },
+    "backgroundElement": {
+      "dark": "coal6",
+      "light": "ash2"
+    },
+
+    "border": {
+      "dark": "coal9",
+      "light": "ember6"
+    },
+    "borderActive": {
+      "dark": "ember3",
+      "light": "ember3"
+    },
+    "borderSubtle": {
+      "dark": "coal4",
+      "light": "coal4"
+    },
+
+    "diffAdded": {
+      "dark": "ash1",
+      "light": "ash1"
+    },
+    "diffRemoved": {
+      "dark": "ember7",
+      "light": "ember7"
+    },
+    "diffContext": {
+      "dark": "coal3",
+      "light": "coal3"
+    },
+    "diffHunkHeader": {
+      "dark": "ember6",
+      "light": "ember6"
+    },
+    "diffHighlightAdded": {
+      "dark": "ash3",
+      "light": "ash3"
+    },
+    "diffHighlightRemoved": {
+      "dark": "ember5",
+      "light": "ember5"
+    },
+    "diffAddedBg": {
+      "dark": "#1A2A1A",
+      "light": "#E0E0E0"
+    },
+    "diffRemovedBg": {
+      "dark": "#2A1A1A",
+      "light": "#E0E0E0"
+    },
+    "diffContextBg": {
+      "dark": "coal5",
+      "light": "coal5"
+    },
+    "diffLineNumber": {
+      "dark": "coal4",
+      "light": "coal4"
+    },
+    "diffAddedLineNumberBg": {
+      "dark": "#1A2A1A",
+      "light": "#E0E0E0"
+    },
+    "diffRemovedLineNumberBg": {
+      "dark": "#2A1A1A",
+      "light": "#E0E0E0"
+    },
+
+    "markdownText": {
+      "dark": "coal0",
+      "light": "coal9"
+    },
+    "markdownHeading": {
+      "dark": "ember3",
+      "light": "ember3"
+    },
+    "markdownLink": {
+      "dark": "ember1",
+      "light": "ember1"
+    },
+    "markdownLinkText": {
+      "dark": "ember5",
+      "light": "ember5"
+    },
+    "markdownCode": {
+      "dark": "ember5",
+      "light": "ember5"
+    },
+    "markdownBlockQuote": {
+      "dark": "ember6",
+      "light": "ember6"
+    },
+    "markdownEmph": {
+      "dark": "coal0",
+      "light": "coal9"
+    },
+    "markdownStrong": {
+      "dark": "coal0",
+      "light": "coal9"
+    },
+    "markdownHorizontalRule": {
+      "dark": "coal4",
+      "light": "coal4"
+    },
+    "markdownListItem": {
+      "dark": "ember3",
+      "light": "ember3"
+    },
+    "markdownListEnumeration": {
+      "dark": "ember5",
+      "light": "ember5"
+    },
+    "markdownImage": {
+      "dark": "ember3",
+      "light": "ember3"
+    },
+    "markdownImageText": {
+      "dark": "ember5",
+      "light": "ember5"
+    },
+    "markdownCodeBlock": {
+      "dark": "coal0",
+      "light": "coal9"
+    },
+
+    "syntaxComment": {
+      "dark": "coal3",
+      "light": "coal3"
+    },
+    "syntaxKeyword": {
+      "dark": "ember5",
+      "light": "ember5"
+    },
+    "syntaxFunction": {
+      "dark": "ember1",
+      "light": "ember1"
+    },
+    "syntaxVariable": {
+      "dark": "coal0",
+      "light": "coal9"
+    },
+    "syntaxString": {
+      "dark": "ember3",
+      "light": "ember3"
+    },
+    "syntaxNumber": {
+      "dark": "ember4",
+      "light": "ember4"
+    },
+    "syntaxType": {
+      "dark": "ember1",
+      "light": "ember1"
+    },
+    "syntaxOperator": {
+      "dark": "ember5",
+      "light": "ember5"
+    },
+    "syntaxPunctuation": {
+      "dark": "coal2",
+      "light": "coal2"
+    }
+  }
+}

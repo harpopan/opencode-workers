@@ -1,0 +1,236 @@
+{
+  "$schema": "https://opencode.ai/theme.json",
+  "defs": {
+    "lab0": "#0E1A24",
+    "lab1": "#122330",
+    "lab2": "#1A2E40",
+    "lab3": "#23455C",
+    "lab4": "#D8F2FF",
+    "lab5": "#C4E8F5",
+    "lab6": "#B4DFF0",
+    "lab7": "#7AD7FF",
+    "lab8": "#4AC2F0",
+    "lab9": "#2FA5D0",
+    "lab10": "#1F7FA8",
+
+    "reactiveMagenta": "#FF4FD2",
+    "reactiveMagentaSoft": "#FF7BE0",
+
+    "accentCyan": "#78DBFF",
+    "accentIce": "#B4F9F8",
+
+    "grayMetal1": "#A9B8C0",
+    "grayMetal2": "#7A8894",
+    "grayMetal3": "#4A5560",
+    "grayMetal4": "#2A3036"
+  },
+  "theme": {
+    "primary": {
+      "dark": "lab8",
+      "light": "lab10"
+    },
+    "secondary": {
+      "dark": "lab7",
+      "light": "lab7"
+    },
+    "accent": {
+      "dark": "reactiveMagenta",
+      "light": "reactiveMagenta"
+    },
+
+    "error": {
+      "dark": "reactiveMagentaSoft",
+      "light": "reactiveMagentaSoft"
+    },
+    "warning": {
+      "dark": "lab9",
+      "light": "lab9"
+    },
+    "success": {
+      "dark": "accentIce",
+      "light": "accentIce"
+    },
+    "info": {
+      "dark": "lab8",
+      "light": "lab10"
+    },
+
+    "text": {
+      "dark": "lab4",
+      "light": "lab0"
+    },
+    "textMuted": {
+      "dark": "grayMetal2",
+      "light": "grayMetal3"
+    },
+
+    "background": {
+      "dark": "lab0",
+      "light": "lab6"
+    },
+    "backgroundPanel": {
+      "dark": "lab1",
+      "light": "lab5"
+    },
+    "backgroundElement": {
+      "dark": "lab2",
+      "light": "lab4"
+    },
+
+    "border": {
+      "dark": "lab3",
+      "light": "lab2"
+    },
+    "borderActive": {
+      "dark": "lab7",
+      "light": "lab9"
+    },
+    "borderSubtle": {
+      "dark": "lab2",
+      "light": "lab3"
+    },
+
+    "diffAdded": {
+      "dark": "accentIce",
+      "light": "accentIce"
+    },
+    "diffRemoved": {
+      "dark": "reactiveMagenta",
+      "light": "reactiveMagenta"
+    },
+    "diffContext": {
+      "dark": "lab3",
+      "light": "lab3"
+    },
+    "diffHunkHeader": {
+      "dark": "lab3",
+      "light": "lab3"
+    },
+    "diffHighlightAdded": {
+      "dark": "accentCyan",
+      "light": "accentCyan"
+    },
+    "diffHighlightRemoved": {
+      "dark": "reactiveMagentaSoft",
+      "light": "reactiveMagentaSoft"
+    },
+    "diffAddedBg": {
+      "dark": "#122330",
+      "light": "#C4E8F5"
+    },
+    "diffRemovedBg": {
+      "dark": "#122330",
+      "light": "#C4E8F5"
+    },
+    "diffContextBg": {
+      "dark": "lab1",
+      "light": "lab5"
+    },
+    "diffLineNumber": {
+      "dark": "lab2",
+      "light": "lab4"
+    },
+    "diffAddedLineNumberBg": {
+      "dark": "#122330",
+      "light": "#C4E8F5"
+    },
+    "diffRemovedLineNumberBg": {
+      "dark": "#122330",
+      "light": "#C4E8F5"
+    },
+
+    "markdownText": {
+      "dark": "lab4",
+      "light": "lab0"
+    },
+    "markdownHeading": {
+      "dark": "lab8",
+      "light": "lab10"
+    },
+    "markdownLink": {
+      "dark": "lab7",
+      "light": "lab7"
+    },
+    "markdownLinkText": {
+      "dark": "reactiveMagenta",
+      "light": "reactiveMagenta"
+    },
+    "markdownCode": {
+      "dark": "accentIce",
+      "light": "accentIce"
+    },
+    "markdownBlockQuote": {
+      "dark": "lab3",
+      "light": "lab3"
+    },
+    "markdownEmph": {
+      "dark": "reactiveMagentaSoft",
+      "light": "reactiveMagentaSoft"
+    },
+    "markdownStrong": {
+      "dark": "lab7",
+      "light": "lab7"
+    },
+    "markdownHorizontalRule": {
+      "dark": "lab3",
+      "light": "lab3"
+    },
+    "markdownListItem": {
+      "dark": "lab8",
+      "light": "lab10"
+    },
+    "markdownListEnumeration": {
+      "dark": "reactiveMagenta",
+      "light": "reactiveMagenta"
+    },
+    "markdownImage": {
+      "dark": "lab7",
+      "light": "lab7"
+    },
+    "markdownImageText": {
+      "dark": "reactiveMagenta",
+      "light": "reactiveMagenta"
+    },
+    "markdownCodeBlock": {
+      "dark": "lab4",
+      "light": "lab0"
+    },
+
+    "syntaxComment": {
+      "dark": "lab3",
+      "light": "lab3"
+    },
+    "syntaxKeyword": {
+      "dark": "reactiveMagenta",
+      "light": "reactiveMagenta"
+    },
+    "syntaxFunction": {
+      "dark": "lab8",
+      "light": "lab8"
+    },
+    "syntaxVariable": {
+      "dark": "lab7",
+      "light": "lab7"
+    },
+    "syntaxString": {
+      "dark": "accentIce",
+      "light": "accentIce"
+    },
+    "syntaxNumber": {
+      "dark": "reactiveMagentaSoft",
+      "light": "reactiveMagentaSoft"
+    },
+    "syntaxType": {
+      "dark": "lab7",
+      "light": "lab7"
+    },
+    "syntaxOperator": {
+      "dark": "lab9",
+      "light": "lab9"
+    },
+    "syntaxPunctuation": {
+      "dark": "lab4",
+      "light": "lab0"
+    }
+  }
+}

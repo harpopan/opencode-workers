@@ -1,0 +1,239 @@
+{
+  "$schema": "https://opencode.ai/theme.json",
+  "defs": {
+    "bone0": "#F2ECE4",
+    "bone1": "#E8E2DA",
+    "bone2": "#D8D2C8",
+    "bone3": "#C8C2B8",
+    "bone4": "#B8B2A8",
+    "bone5": "#A89F94",
+    "bone6": "#8F857C",
+
+    "fluorGreen": "#7CFF7A",
+    "fluorGreenSoft": "#A8FFB0",
+    "fluorGreenDeep": "#4CE65A",
+
+    "fluorPink": "#FF6AD9",
+    "fluorPinkSoft": "#FF9CE8",
+
+    "grayLab0": "#F4F4F4",
+    "grayLab1": "#E6E6E6",
+    "grayLab2": "#CFCFCF",
+    "grayLab3": "#B8B8B8",
+    "grayLab4": "#9A9A9A",
+    "grayLab5": "#6F6F6F",
+    "grayLab6": "#4A4A4A",
+    "grayLab7": "#2F2F2F",
+    "grayLab8": "#1F1F1F",
+    "grayLab9": "#121212"
+  },
+  "theme": {
+    "primary": {
+      "dark": "fluorGreen",
+      "light": "fluorGreenDeep"
+    },
+    "secondary": {
+      "dark": "fluorPink",
+      "light": "fluorPink"
+    },
+    "accent": {
+      "dark": "fluorGreenSoft",
+      "light": "fluorGreenSoft"
+    },
+
+    "error": {
+      "dark": "fluorPink",
+      "light": "fluorPink"
+    },
+    "warning": {
+      "dark": "fluorGreenDeep",
+      "light": "fluorGreenDeep"
+    },
+    "success": {
+      "dark": "fluorGreenSoft",
+      "light": "fluorGreenSoft"
+    },
+    "info": {
+      "dark": "fluorGreen",
+      "light": "fluorGreenDeep"
+    },
+
+    "text": {
+      "dark": "bone0",
+      "light": "grayLab9"
+    },
+    "textMuted": {
+      "dark": "bone5",
+      "light": "bone4"
+    },
+
+    "background": {
+      "dark": "grayLab8",
+      "light": "bone0"
+    },
+    "backgroundPanel": {
+      "dark": "grayLab7",
+      "light": "bone1"
+    },
+    "backgroundElement": {
+      "dark": "grayLab6",
+      "light": "bone2"
+    },
+
+    "border": {
+      "dark": "grayLab7",
+      "light": "bone3"
+    },
+    "borderActive": {
+      "dark": "fluorGreen",
+      "light": "fluorGreenDeep"
+    },
+    "borderSubtle": {
+      "dark": "grayLab6",
+      "light": "bone4"
+    },
+
+    "diffAdded": {
+      "dark": "fluorGreen",
+      "light": "fluorGreen"
+    },
+    "diffRemoved": {
+      "dark": "fluorPink",
+      "light": "fluorPink"
+    },
+    "diffContext": {
+      "dark": "grayLab5",
+      "light": "grayLab5"
+    },
+    "diffHunkHeader": {
+      "dark": "grayLab6",
+      "light": "grayLab6"
+    },
+    "diffHighlightAdded": {
+      "dark": "fluorGreenSoft",
+      "light": "fluorGreenSoft"
+    },
+    "diffHighlightRemoved": {
+      "dark": "fluorPinkSoft",
+      "light": "fluorPinkSoft"
+    },
+    "diffAddedBg": {
+      "dark": "#2F2F2F",
+      "light": "#E8E2DA"
+    },
+    "diffRemovedBg": {
+      "dark": "#2F2F2F",
+      "light": "#E8E2DA"
+    },
+    "diffContextBg": {
+      "dark": "grayLab7",
+      "light": "bone1"
+    },
+    "diffLineNumber": {
+      "dark": "grayLab6",
+      "light": "bone3"
+    },
+    "diffAddedLineNumberBg": {
+      "dark": "#2F2F2F",
+      "light": "#E8E2DA"
+    },
+    "diffRemovedLineNumberBg": {
+      "dark": "#2F2F2F",
+      "light": "#E8E2DA"
+    },
+
+    "markdownText": {
+      "dark": "bone0",
+      "light": "grayLab9"
+    },
+    "markdownHeading": {
+      "dark": "fluorGreen",
+      "light": "fluorGreenDeep"
+    },
+    "markdownLink": {
+      "dark": "fluorPink",
+      "light": "fluorPink"
+    },
+    "markdownLinkText": {
+      "dark": "fluorGreen",
+      "light": "fluorGreen"
+    },
+    "markdownCode": {
+      "dark": "fluorGreenSoft",
+      "light": "fluorGreenSoft"
+    },
+    "markdownBlockQuote": {
+      "dark": "grayLab6",
+      "light": "grayLab6"
+    },
+    "markdownEmph": {
+      "dark": "fluorPinkSoft",
+      "light": "fluorPinkSoft"
+    },
+    "markdownStrong": {
+      "dark": "fluorGreen",
+      "light": "fluorGreen"
+    },
+    "markdownHorizontalRule": {
+      "dark": "grayLab6",
+      "light": "grayLab6"
+    },
+    "markdownListItem": {
+      "dark": "fluorGreen",
+      "light": "fluorGreenDeep"
+    },
+    "markdownListEnumeration": {
+      "dark": "fluorPink",
+      "light": "fluorPink"
+    },
+    "markdownImage": {
+      "dark": "fluorGreen",
+      "light": "fluorGreen"
+    },
+    "markdownImageText": {
+      "dark": "fluorPink",
+      "light": "fluorPink"
+    },
+    "markdownCodeBlock": {
+      "dark": "bone0",
+      "light": "grayLab9"
+    },
+
+    "syntaxComment": {
+      "dark": "grayLab5",
+      "light": "grayLab5"
+    },
+    "syntaxKeyword": {
+      "dark": "fluorPink",
+      "light": "fluorPink"
+    },
+    "syntaxFunction": {
+      "dark": "fluorGreen",
+      "light": "fluorGreen"
+    },
+    "syntaxVariable": {
+      "dark": "fluorGreenSoft",
+      "light": "fluorGreenSoft"
+    },
+    "syntaxString": {
+      "dark": "fluorGreen",
+      "light": "fluorGreen"
+    },
+    "syntaxNumber": {
+      "dark": "fluorPinkSoft",
+      "light": "fluorPinkSoft"
+    },
+    "syntaxType": {
+      "dark": "fluorGreenSoft",
+      "light": "fluorGreenSoft"
+    },
+    "syntaxOperator": {
+      "dark": "fluorGreenDeep",
+      "light": "fluorGreenDeep"
+    },
+    "syntaxPunctuation": {
+      "dark": "bone0",
+      "light": "grayLab9"
+    }
+  }
+}
