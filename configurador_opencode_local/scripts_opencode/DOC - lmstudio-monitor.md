@@ -36,6 +36,7 @@ python3 ~/.lmstudio/lmstudio-monitor.py
 |-----------|-------------|-------------------|
 | `--interval N` | Intervalo de actualización en segundos | `2` |
 | `--file PATH` | Ruta a un archivo de log específico | Auto-detecta |
+| `--logs-dir DIR` | Directorio raíz de logs | `~/.lmstudio/server-logs` |
 | `--theme THEME` | Theme de colores (dracula, nord, minimalista) | `dracula` |
 | `--help, -h` | Muestra la ayuda | — |
 
@@ -47,6 +48,9 @@ python3 ~/.lmstudio/lmstudio-monitor.py --interval 5
 
 # Monitorizar un archivo de log específico
 python3 ~/.lmstudio/lmstudio-monitor.py --file ~/.lmstudio/server-logs/2026-09/2026-09-08.1.log
+
+# Ejecutar con directorio de logs personalizado
+python3 ~/.lmstudio/lmstudio-monitor.py --logs-dir /ruta/personalizada/server-logs
 
 # Ejecutar con theme Nord
 python3 ~/.lmstudio/lmstudio-monitor.py --theme nord
@@ -69,10 +73,12 @@ lmstudio-monitor.py
 │   ├── RUTA_BASE_LOGS       # Ruta raíz de logs
 │   └── PATRONES             # Expresiones regulares para parsing
 ├── Funciones
+│   ├── estado_inicial()     # Devuelve diccionario de estado inicial
 │   ├── obtener_theme()      # Devuelve la paleta de colores
 │   ├── buscar_ultimo_log()  # Localiza el log más reciente
-│   ├── parsear_cola_log()   # Extrae estado del servidor
 │   └── construir_panel()    # Genera la interfaz Rich
+├── Clases
+│   └── LectorLog            # Lector de logs con tailing incremental
 └── principal()              # Punto de entrada
 ```
 
@@ -158,12 +164,42 @@ THEME_ACTUAL = "mi_theme"  # Cambiar aquí el theme por defecto
 
 ### Flujo de ejecución
 
-1. **Inicialización**: Se parsean los argumentos y se localiza el archivo de log
+1. **Inicialización**: Se parsean los argumentos, se localiza el archivo de log y se crea una instancia de `LectorLog`
 2. **Bucle principal**: Cada `intervalo` segundos:
    - Se busca si hay un nuevo archivo de log (rotación diaria)
-   - Se parsea el archivo para extraer el estado actual
+   - Se leen solo las líneas nuevas del archivo (tailing incremental)
+   - Se actualiza el estado acumulado con las nuevas líneas
    - Se construye y actualiza el panel visual
 3. **Terminación**: Se cierra al presionar `q` o `Ctrl+C`
+
+### Clase LectorLog
+
+La clase `LectorLog` gestiona la lectura incremental de archivos de log:
+
+```python
+class LectorLog:
+    def __init__(self):
+        self.ruta = None          # Ruta del archivo actual
+        self.offset = 0           # Posición de lectura (bytes)
+        self.estado = estado_inicial()  # Estado acumulado
+        self.errores_recientes = []     # Últimos 5 errores
+        self.marca_tiempo = "-"         # Última marca de tiempo
+
+    def leer_nuevas_lineas(self, ruta_archivo: Path) -> list:
+        # Lee solo líneas nuevas desde self.offset
+        # Resetea si el archivo cambió
+        ...
+
+    def actualizar_estado(self, lineas: list) -> dict:
+        # Procesa líneas nuevas y actualiza self.estado
+        ...
+```
+
+**Características principales:**
+- **Tailing incremental**: Usa `seek()` para leer solo desde la última posición conocida
+- **Detección de rotación**: Resetea el estado cuando cambia la ruta del archivo
+- **Acumulación de estado**: Mantiene el estado entre iteraciones sin reconstruirlo
+- **Manejo de errores**: Devuelve `error_lectura` si el archivo no existe
 
 ### Parsing de logs
 
@@ -216,15 +252,18 @@ estado = {
     "tiempo_eval_prompt": float, # milisegundos
     "tokens_eval_prompt": int,
     "velocidad_eval_prompt": float,
+    "ultima_eval_prompt": dict | None,  # {"tiempo", "tokens", "velocidad"}
 
     # Generación
     "tiempo_eval_generacion": float,
     "tokens_eval_generacion": int,
     "velocidad_eval_generacion": float,
+    "ultima_eval_generacion": dict | None,  # {"tiempo", "tokens", "velocidad"}
 
     # Totales
     "tiempo_total_ms": float,
     "tokens_totales": int,
+    "ultimo_total": dict | None,  # {"tiempo", "tokens"}
 
     # Streaming
     "transmitiendo": bool,
@@ -237,6 +276,7 @@ estado = {
     # Metadatos
     "archivo_log": str,
     "lineas_log": int,
+    "error_lectura": str | None,  # Mensaje de error si no se puede leer el log
 }
 ```
 
@@ -304,12 +344,12 @@ PATRONES = {
 }
 ```
 
-Y procesarlos en `parsear_cola_log()`:
+Y procesarlos en el método `actualizar_estado()` de la clase `LectorLog`:
 
 ```python
 coincidencia = PATRONES["nuevo_patron"].search(linea)
 if coincidencia:
-    estado["nueva_clave"] = coincidencia.group(1)
+    self.estado["nueva_clave"] = coincidencia.group(1)
 ```
 
 ### Añadir nuevas secciones al panel
@@ -320,7 +360,7 @@ Para añadir una nueva sección visual:
 2. Usar los colores del theme: `theme['primario']`, `theme['secundario']`, etc.
 3. Usar los símbolos de `SIMBOLOS` para mantener consistencia
 4. Añadirla al layout correspondiente
-5. Actualizar el modelo de datos en `parsear_cola_log()`
+5. Actualizar el modelo de datos en `estado_inicial()` y el parsing en `LectorLog.actualizar_estado()`
 
 Ejemplo:
 
@@ -343,10 +383,16 @@ layout["seccion"].split_row(
 
 ### El monitor no encuentra logs
 
-Verificar que existe la ruta:
+Verificar que existe la ruta por defecto:
 
 ```bash
 ls -la ~/.lmstudio/server-logs/
+```
+
+Si los logs están en otra ubicación, usar el parámetro `--logs-dir`:
+
+```bash
+python3 lmstudio-monitor.py --logs-dir /ruta/personalizada/server-logs
 ```
 
 ### Errores de codificación
@@ -355,7 +401,9 @@ El script maneja automáticamente errores de codificación con `errors="replace"
 
 ### Rendimiento
 
-- Para logs muy grandes (>10000 líneas), se procesan solo las primeras 400 y las últimas 1500 líneas
+- **Tailing incremental**: El monitor solo lee las líneas nuevas del archivo de log en cada iteración, sin releer el archivo completo. Esto es eficiente incluso para logs de varios MB.
+- **Detección de rotación**: Si el archivo de log cambia (rotación diaria), el monitor resetea automáticamente y comienza a leer desde el principio del nuevo archivo.
+- **Gestión de errores**: Si el archivo de log no existe, el monitor muestra un aviso y espera a que el archivo esté disponible, sin cerrarse.
 - El intervalo de actualización por defecto (2s) es equilibrado para la mayoría de casos
 
 ## Licencia

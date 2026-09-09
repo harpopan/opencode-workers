@@ -95,8 +95,211 @@ SIMBOLOS = {
 # CONSTANTES
 # =============================================================================
 
-# Ruta base donde se almacenan los logs del servidor
-RUTA_BASE_LOGS = Path.home() / ".lmstudio" / "server-logs"
+# Ruta por defecto donde se almacenan los logs del servidor
+RUTA_BASE_LOGS_DEFAULT = Path.home() / ".lmstudio" / "server-logs"
+
+
+def estado_inicial() -> dict:
+    """
+    Devuelve el diccionario de estado inicial con valores por defecto.
+
+    Returns:
+        dict: Diccionario con el estado inicial del servidor.
+    """
+    return {
+        "estado_servidor": "Desconocido",
+        "puerto_servidor": "-",
+        "nombre_modelo": "-",
+        "archivo_modelo": "-",
+        "modelo_cargado": False,
+        "num_slots": "-",
+        "contexto_por_slot": "-",
+        "progreso_prompt": 0.0,
+        "progreso_prompt_activo": False,
+        "tokens_prompt": 0,
+        "velocidad_prompt": 0.0,
+        "tiempo_eval_prompt": 0.0,
+        "tokens_eval_prompt": 0,
+        "velocidad_eval_prompt": 0.0,
+        "tiempo_eval_generacion": 0.0,
+        "tokens_eval_generacion": 0,
+        "velocidad_eval_generacion": 0.0,
+        "tiempo_total_ms": 0.0,
+        "tokens_totales": 0,
+        "chat_ejecutandose": False,
+        "mensajes_chat": 0,
+        "transmitiendo": False,
+        "ultima_peticion": "-",
+        "hora_ultima_peticion": "-",
+        "endpoint_ultima_peticion": "-",
+        "ultima_eval_prompt": None,
+        "ultima_eval_generacion": None,
+        "ultimo_total": None,
+        "errores": [],
+        "archivo_log": "",
+        "lineas_log": 0,
+        "error_lectura": None,
+    }
+
+
+class LectorLog:
+    """
+    Lector de logs con tailing incremental.
+
+    Mantiene el estado acumulado entre iteraciones y solo lee las líneas
+    nuevas del archivo de log, evitando releer el archivo completo en cada tick.
+    """
+
+    def __init__(self):
+        """Inicializa el lector de logs."""
+        self.ruta = None
+        self.offset = 0
+        self.estado = estado_inicial()
+        self.errores_recientes = []
+        self.marca_tiempo = "-"
+
+    def leer_nuevas_lineas(self, ruta_archivo: Path) -> list:
+        """
+        Lee las líneas nuevas del archivo de log desde la última posición.
+
+        Si el archivo ha cambiado (o es la primera lectura), resetea el estado
+        y lee desde el principio.
+
+        Args:
+            ruta_archivo: Ruta al archivo de log a leer.
+
+        Returns:
+            list: Lista de líneas nuevas leídas.
+        """
+        if ruta_archivo != self.ruta:
+            self.ruta = ruta_archivo
+            self.offset = 0
+            self.estado = estado_inicial()
+            self.errores_recientes = []
+            self.marca_tiempo = "-"
+
+        try:
+            with open(ruta_archivo, "r", errors="replace") as f:
+                f.seek(self.offset)
+                nuevas = f.readlines()
+                self.offset = f.tell()
+                self.estado["error_lectura"] = None
+                return nuevas
+        except FileNotFoundError:
+            self.estado["error_lectura"] = f"Archivo de log no encontrado: {ruta_archivo}"
+            return []
+
+    def actualizar_estado(self, lineas: list) -> dict:
+        """
+        Actualiza el estado con las líneas nuevas leídas.
+
+        Args:
+            lineas: Lista de líneas nuevas a procesar.
+
+        Returns:
+            dict: Estado actualizado del servidor.
+        """
+        for linea in lineas:
+            coincidencia_ts = re.search(r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]", linea)
+            if coincidencia_ts:
+                self.marca_tiempo = coincidencia_ts.group(1)
+
+            coincidencia = PATRONES["servidor_escuchando"].search(linea)
+            if coincidencia:
+                self.estado["puerto_servidor"] = coincidencia.group(1)
+                self.estado["estado_servidor"] = "Activo"
+
+            if PATRONES["servidor_iniciado"].search(linea):
+                self.estado["estado_servidor"] = "Activo"
+            if PATRONES["servidor_detenido"].search(linea):
+                self.estado["estado_servidor"] = "Detenido"
+
+            coincidencia = PATRONES["modelo_cargando"].search(linea)
+            if coincidencia:
+                self.estado["archivo_modelo"] = Path(coincidencia.group(1)).name
+                ruta_completa = coincidencia.group(1)
+                partes = ruta_completa.split("/")
+                if len(partes) >= 3:
+                    self.estado["nombre_modelo"] = "/".join(partes[-2:])
+                else:
+                    self.estado["nombre_modelo"] = Path(ruta_completa).name
+
+            if PATRONES["modelo_cargado"].search(linea):
+                self.estado["modelo_cargado"] = True
+
+            coincidencia = PATRONES["modelo_slots"].search(linea)
+            if coincidencia:
+                self.estado["num_slots"] = coincidencia.group(1)
+                self.estado["contexto_por_slot"] = coincidencia.group(2)
+
+            coincidencia = PATRONES["progreso_prompt"].search(linea)
+            if coincidencia:
+                porcentaje = float(coincidencia.group(1))
+                self.estado["progreso_prompt"] = porcentaje
+                self.estado["progreso_prompt_activo"] = porcentaje < 100.0
+
+            coincidencia = PATRONES["velocidad_procesamiento_prompt"].search(linea)
+            if coincidencia:
+                self.estado["tokens_prompt"] = int(coincidencia.group(1))
+                self.estado["velocidad_prompt"] = float(coincidencia.group(3))
+
+            coincidencia = PATRONES["evaluacion_prompt"].search(linea)
+            if coincidencia:
+                self.estado["tiempo_eval_prompt"] = float(coincidencia.group(1))
+                self.estado["tokens_eval_prompt"] = int(coincidencia.group(2))
+                self.estado["velocidad_eval_prompt"] = float(coincidencia.group(3))
+                self.estado["ultima_eval_prompt"] = {
+                    "tiempo": float(coincidencia.group(1)),
+                    "tokens": int(coincidencia.group(2)),
+                    "velocidad": float(coincidencia.group(3)),
+                }
+
+            coincidencia = PATRONES["evaluacion_generacion"].search(linea)
+            if coincidencia:
+                self.estado["tiempo_eval_generacion"] = float(coincidencia.group(1))
+                self.estado["tokens_eval_generacion"] = int(coincidencia.group(2))
+                self.estado["velocidad_eval_generacion"] = float(coincidencia.group(3))
+                self.estado["ultima_eval_generacion"] = {
+                    "tiempo": float(coincidencia.group(1)),
+                    "tokens": int(coincidencia.group(2)),
+                    "velocidad": float(coincidencia.group(3)),
+                }
+
+            coincidencia = PATRONES["tiempo_total"].search(linea)
+            if coincidencia:
+                self.estado["tiempo_total_ms"] = float(coincidencia.group(1))
+                self.estado["tokens_totales"] = int(coincidencia.group(2))
+                self.estado["ultimo_total"] = {
+                    "tiempo": float(coincidencia.group(1)),
+                    "tokens": int(coincidencia.group(2)),
+                }
+
+            if PATRONES["chat_ejecutando"].search(linea):
+                coincidencia_chat = PATRONES["chat_ejecutando"].search(linea)
+                if coincidencia_chat:
+                    self.estado["chat_ejecutandose"] = True
+                    self.estado["mensajes_chat"] = int(coincidencia_chat.group(1))
+
+            if PATRONES["streaming_inicio"].search(linea):
+                self.estado["transmitiendo"] = True
+            if PATRONES["streaming_fin"].search(linea):
+                self.estado["transmitiendo"] = False
+                self.estado["chat_ejecutandose"] = False
+
+            coincidencia = PATRONES["peticion_recibida"].search(linea)
+            if coincidencia:
+                self.estado["ultima_peticion"] = self.marca_tiempo
+                self.estado["endpoint_ultima_peticion"] = f"{coincidencia.group(1)} {coincidencia.group(2)}"
+
+            if PATRONES["error"].search(linea):
+                linea_limpia = re.sub(r"\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]\[.*?\]\s*", "", linea).strip()
+                if linea_limpia and len(linea_limpia) > 10:
+                    self.errores_recientes.append((self.marca_tiempo, linea_limpia[:90]))
+
+        self.estado["errores"] = self.errores_recientes[-5:]
+        self.estado["lineas_log"] += len(lineas)
+        return self.estado
+
 
 # Patrones de expresiones regulares para extraer información de los logs
 PATRONES = {
@@ -114,14 +317,14 @@ PATRONES = {
         r"prompt eval time =\s*([\d.]+) ms /\s*(\d+) tokens.*?([\d.]+) tokens per second"
     ),
     "evaluacion_generacion": re.compile(
-        r"eval time =\s*([\d.]+) ms /\s*(\d+) tokens.*?([\d.]+) tokens per second"
+        r"(?<!prompt )eval time =\s*([\d.]+) ms /\s*(\d+) tokens.*?([\d.]+) tokens per second"
     ),
     "tiempo_total": re.compile(r"total time =\s*([\d.]+) ms /\s*(\d+) tokens"),
     "chat_ejecutando": re.compile(r"Running chat completion on conversation with (\d+) messages"),
     "streaming_inicio": re.compile(r"Streaming response"),
     "streaming_fin": re.compile(r"Finished streaming response"),
     "peticion_recibida": re.compile(r"Received request: (GET|POST) to (\S+)"),
-    "error": re.compile(r"\bE\b.*|ERROR|error|failed|failed to"),
+    "error": re.compile(r"ERROR|error|failed", re.IGNORECASE),
     "archivo_modelo": re.compile(r"loading model '([^']+)'"),
 }
 
@@ -144,20 +347,35 @@ def obtener_theme(nombre: str = None) -> dict:
 # FUNCIONES DE BÚSQUEDA Y PARSING
 # =============================================================================
 
-def buscar_ultimo_log() -> Path:
+def buscar_ultimo_log(ruta_base: Path = RUTA_BASE_LOGS_DEFAULT) -> Path:
     """
     Busca y devuelve la ruta al archivo de log más reciente.
 
-    Recorre los directorios de logs de los últimos 12 meses en orden
-    cronológico inverso hasta encontrar un archivo de log válido.
+    Prioriza el log del día actual. Si no existe, busca en los últimos
+    12 meses en orden cronológico inverso.
+
+    Args:
+        ruta_base: Directorio raíz donde buscar los logs.
 
     Returns:
         Path: Ruta al archivo de log más reciente encontrado.
+              Si no se encuentra ningún log, devuelve una ruta por defecto
+              para el día actual (que puede no existir).
     """
     ahora = datetime.now()
-    meses_buscar = []
 
-    for meses_atras in range(12):
+    # 1. Intentar encontrar log del día actual
+    ruta_hoy = ruta_base / f"{ahora.year:04d}-{ahora.month:02d}"
+    if ruta_hoy.exists():
+        patron_hoy = f"{ahora.strftime('%Y-%m-%d')}*.log"
+        logs_hoy = sorted(ruta_hoy.glob(patron_hoy), reverse=True)
+        for log in logs_hoy:
+            if log.exists() and log.stat().st_size > 0:
+                return log
+
+    # 2. Buscar en los últimos 12 meses
+    meses_buscar = []
+    for meses_atras in range(1, 13):
         anio = ahora.year
         mes = ahora.month - meses_atras
         while mes <= 0:
@@ -166,13 +384,15 @@ def buscar_ultimo_log() -> Path:
         meses_buscar.append(f"{anio:04d}-{mes:02d}")
 
     for directorio_mes in meses_buscar:
-        ruta_mes = RUTA_BASE_LOGS / directorio_mes
+        ruta_mes = ruta_base / directorio_mes
         if ruta_mes.exists():
             logs = sorted(ruta_mes.glob("*.log"), reverse=True)
-            if logs:
-                return logs[0]
+            for log in logs:
+                if log.exists() and log.stat().st_size > 0:
+                    return log
 
-    return RUTA_BASE_LOGS / f"{ahora.year:04d}-{ahora.month:02d}" / f"{ahora.strftime('%Y-%m-%d')}.1.log"
+    # 3. Si no se encontró nada, devolver ruta por defecto para hoy
+    return ruta_base / f"{ahora.year:04d}-{ahora.month:02d}" / f"{ahora.strftime('%Y-%m-%d')}.1.log"
 
 
 def parsear_cola_log(ruta_archivo: Path, max_lineas: int = 1500) -> dict:
@@ -189,19 +409,6 @@ def parsear_cola_log(ruta_archivo: Path, max_lineas: int = 1500) -> dict:
     Returns:
         dict: Diccionario con el estado extraído del servidor.
     """
-    try:
-        with open(ruta_archivo, "r", errors="replace") as archivo:
-            lineas = archivo.readlines()
-    except FileNotFoundError:
-        return {"error": f"Archivo de log no encontrado: {ruta_archivo}"}
-
-    if len(lineas) <= max_lineas:
-        lineas_combinadas = lineas
-    else:
-        cabecera = lineas[:400]
-        cola = lineas[-max_lineas:]
-        lineas_combinadas = cabecera + cola
-
     estado = {
         "estado_servidor": "Desconocido",
         "puerto_servidor": "-",
@@ -233,8 +440,25 @@ def parsear_cola_log(ruta_archivo: Path, max_lineas: int = 1500) -> dict:
         "ultimo_total": None,
         "errores": [],
         "archivo_log": str(ruta_archivo),
-        "lineas_log": len(lineas),
+        "lineas_log": 0,
+        "error_lectura": None,
     }
+
+    try:
+        with open(ruta_archivo, "r", errors="replace") as archivo:
+            lineas = archivo.readlines()
+    except FileNotFoundError:
+        estado["error_lectura"] = f"Archivo de log no encontrado: {ruta_archivo}"
+        return estado
+
+    if len(lineas) <= max_lineas:
+        lineas_combinadas = lineas
+    else:
+        cabecera = lineas[:400]
+        cola = lineas[-max_lineas:]
+        lineas_combinadas = cabecera + cola
+
+    estado["lineas_log"] = len(lineas)
 
     errores_recientes = []
     marca_tiempo = "-"
@@ -331,7 +555,7 @@ def parsear_cola_log(ruta_archivo: Path, max_lineas: int = 1500) -> dict:
             estado["ultima_peticion"] = marca_tiempo
             estado["endpoint_ultima_peticion"] = f"{coincidencia.group(1)} {coincidencia.group(2)}"
 
-        if PATRONES["error"].search(linea) and ("E " in linea or "ERROR" in linea or "error" in linea.lower()):
+        if PATRONES["error"].search(linea):
             linea_limpia = re.sub(r"\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]\[.*?\]\s*", "", linea).strip()
             if linea_limpia and len(linea_limpia) > 10:
                 errores_recientes.append((marca_tiempo, linea_limpia[:90]))
@@ -528,6 +752,7 @@ def principal():
         consola.print("  --help, -h         Mostrar esta ayuda")
         consola.print("  --interval N       Intervalo de actualización en segundos (default: 2)")
         consola.print("  --file PATH        Archivo de log específico a monitorear")
+        consola.print(f"  --logs-dir DIR     Directorio raíz de logs (default: {RUTA_BASE_LOGS_DEFAULT})")
         consola.print(f"  --theme THEME      Theme de colores (disponibles: {', '.join(THEMES.keys())})")
         consola.print()
         consola.print(f"  Theme por defecto: {THEME_ACTUAL}")
@@ -544,6 +769,14 @@ def principal():
         if arg == "--file" and i + 1 < len(sys.argv):
             archivo_fijo = Path(sys.argv[i + 1])
 
+    ruta_logs = RUTA_BASE_LOGS_DEFAULT
+    for i, arg in enumerate(sys.argv):
+        if arg == "--logs-dir" and i + 1 < len(sys.argv):
+            ruta_logs = Path(sys.argv[i + 1])
+            if not ruta_logs.exists():
+                consola.print(f"[bold red]Error:[/bold red] Directorio '{ruta_logs}' no existe.")
+                sys.exit(1)
+
     theme_nombre = THEME_ACTUAL
     for i, arg in enumerate(sys.argv):
         if arg == "--theme" and i + 1 < len(sys.argv):
@@ -556,23 +789,33 @@ def principal():
                 sys.exit(1)
 
     theme = obtener_theme(theme_nombre)
-    archivo_log = archivo_fijo if archivo_fijo else buscar_ultimo_log()
+    archivo_log = archivo_fijo if archivo_fijo else buscar_ultimo_log(ruta_logs)
 
     consola.print(f"[bold {theme['terciario']}]Monitor iniciado[/bold {theme['terciario']}] — Theme: {theme_nombre}")
     consola.print(f"[{theme['apagado']}]Presiona q para salir[/{theme['apagado']}]")
     time.sleep(1)
 
     # Bucle principal de actualización
+    lector = LectorLog()
     try:
         with Live(console=consola, refresh_per_second=1, screen=True) as en_vivo:
             while True:
                 if not archivo_fijo:
-                    nuevo_log = buscar_ultimo_log()
+                    nuevo_log = buscar_ultimo_log(ruta_logs)
                     if nuevo_log != archivo_log:
                         archivo_log = nuevo_log
 
-                estado = parsear_cola_log(archivo_log)
-                panel = construir_panel(estado, theme)
+                lineas_nuevas = lector.leer_nuevas_lineas(archivo_log)
+                estado = lector.actualizar_estado(lineas_nuevas)
+                if estado.get("error_lectura"):
+                    panel = Panel(
+                        f"[bold red]{estado['error_lectura']}[/bold red]\n\n"
+                        f"[{theme['apagado']}]Esperando a que el archivo de log esté disponible...[/{theme['apagado']}]",
+                        title=f"[bold {theme['primario']}]LMStudio Monitor[/bold {theme['primario']}]",
+                        border_style=theme['error']
+                    )
+                else:
+                    panel = construir_panel(estado, theme)
                 en_vivo.update(panel)
                 time.sleep(intervalo)
     except KeyboardInterrupt:

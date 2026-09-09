@@ -22,11 +22,11 @@ prioridad) y marcar cada uno como ✅ al terminarlo.
 
 | # | Ítem | Prioridad | Estado |
 |---|------|-----------|--------|
-| 1 | Colisión de regex prompt/generación | 🔴 crítico | ⏳ pendiente |
-| 2 | Crash si el log no existe | 🟡 alto | ⏳ pendiente |
-| 3 | Re-lectura completa del log en cada tick (no hay tailing incremental) | 🟡 alto | ⏳ pendiente |
-| 4 | Duplicación de líneas cabecera/cola | 🟢 medio | ⏳ pendiente |
-| 5 | Regex de `error` con heurística ajena (estilo logcat) | 🔵 bajo | ⏳ pendiente |
+| 1 | Colisión de regex prompt/generación | 🔴 crítico | ✅ completado |
+| 2 | Crash si el log no existe | 🟡 alto | ✅ completado |
+| 3 | Re-lectura completa del log en cada tick (no hay tailing incremental) | 🟡 alto | ✅ completado |
+| 4 | Duplicación de líneas cabecera/cola | 🟢 medio | ✅ completado |
+| 5 | Regex de `error` con heurística ajena (estilo logcat) | 🔵 bajo | ✅ completado |
 
 ---
 
@@ -240,3 +240,17 @@ marcan como error.
 4. Punto 4 (se resuelve solo si se aborda el punto 3; si no, aplicar el
    parche puntual).
 5. Punto 5 (limpieza, sin urgencia).
+
+---
+
+## Estado de implementación
+
+Todos los puntos han sido implementados y verificados:
+
+- **Punto 1**: Corregido con lookbehind negativo `(?<!prompt )` en la regex de `evaluacion_generacion`.
+- **Punto 2**: Implementado devolviendo siempre el diccionario de estado completo con `error_lectura` cuando corresponde.
+- **Punto 3**: Implementado con la clase `LectorLog` que mantiene estado acumulado y usa `seek()` para tailing incremental.
+- **Punto 4**: Resuelto automáticamente con el tailing incremental (ya no se procesan líneas duplicadas).
+- **Punto 5**: Simplificado a `r"ERROR|error|failed"` con `re.IGNORECASE` y eliminada la condición redundante.
+
+El monitor ahora es más eficiente con logs grandes, maneja errores de archivo correctamente, y muestra datos precisos en el panel de generación.
