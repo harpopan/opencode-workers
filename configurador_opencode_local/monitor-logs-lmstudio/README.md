@@ -18,16 +18,38 @@ tokens.
 ## Requisitos
 
 - Python 3.10 o superior
-- Biblioteca `rich`
+- Biblioteca `rich` (se auto-instala si falta al arrancar el script)
 
 ```bash
-pip install rich
+# Linux / macOS
+pip3 install rich
+# o
+python3 -m pip install rich
+
+# Windows (cmd / PowerShell)
+py -m pip install rich
+# si 'py' no funciona:
+python -m pip install rich
+
+# o con requirements.txt (todas las plataformas)
+py -m pip install -r requirements.txt
 ```
+
+> En Windows usa el lanzador `monitor-lmstudio-win.bat` (doble clic) o
+> `monitor-lmstudio-win.ps1`. Ambos fuerzan UTF-8 (`chcp 65001`) para que
+> los símbolos `● █ ░ ▶ ◆ ✗` no salgan como símbolos raros. Se recomienda
+> Windows Terminal + fuente Cascadia / Consolas.
 
 ## Uso
 
 ```bash
+# Linux / macOS
 python3 lmstudio-monitor.py
+
+# Windows
+py lmstudio-monitor.py
+.\monitor-lmstudio-win.ps1
+monitor-lmstudio-win.bat
 ```
 
 ### Opciones

@@ -11,22 +11,90 @@ Dependencias:
 
 Uso:
     python3 lmstudio-monitor.py [--interval SEGUNDOS] [--file RUTA] [--theme THEME]
+                                [--platform auto|linux|windows] [--logs-dir DIR]
+    py lmstudio-monitor.py [--interval SEGUNDOS] [--file RUTA] [--theme THEME]  (Windows)
+                           [--platform auto|linux|windows] [--logs-dir DIR]
 """
 
 import os
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
 
-from rich.console import Console
-from rich.layout import Layout
-from rich.live import Live
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
-from rich import box
+# En Windows, forzar consola UTF-8 para que los simbolos Unicode (● █ ░ ▶ ◆ ✗)
+# no salgan como simbolos raros. En Windows Terminal funciona perfecto;
+# en conhost clasico requiere fuente Consolas/Cascadia + chcp 65001.
+if os.name == "nt":
+    try:
+        os.system("chcp 65001 > nul 2>&1")
+    except Exception:
+        pass
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
+def _importar_rich():
+    from rich.console import Console
+    from rich.layout import Layout
+    from rich.live import Live
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.text import Text
+    from rich import box
+    return Console, Layout, Live, Panel, Table, Text, box
+
+
+try:
+    Console, Layout, Live, Panel, Table, Text, box = _importar_rich()
+except ModuleNotFoundError:
+    print("Falta la dependencia 'rich' (ModuleNotFoundError: No module named 'rich')", file=sys.stderr)
+    print("Intentando instalarla automaticamente con pip...", file=sys.stderr)
+    instalado = False
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "rich"])
+        instalado = True
+    except Exception:
+        # Si ni siquiera hay pip (tipico en Windows con instalacion minima),
+        # intentar restaurarlo con ensurepip y reintentar una vez.
+        try:
+            print("pip no disponible, intentando restaurarlo con ensurepip...", file=sys.stderr)
+            subprocess.check_call([sys.executable, "-m", "ensurepip", "--upgrade"])
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "rich"])
+            instalado = True
+        except Exception:
+            instalado = False
+    if instalado:
+        try:
+            Console, Layout, Live, Panel, Table, Text, box = _importar_rich()
+            print("'rich' instalado correctamente. Continuando...", file=sys.stderr)
+        except ModuleNotFoundError:
+            # pip instalo en otra ubicacion o hace falta reiniciar el proceso
+            # (tipico si pip instalo con --user o en entorno roto).
+            print("", file=sys.stderr)
+            print("'rich' parece haberse instalado, pero este proceso aun no lo ve.", file=sys.stderr)
+            print("Vuelve a ejecutar el script:", file=sys.stderr)
+            print("  Linux / macOS :  python3 lmstudio-monitor.py --help", file=sys.stderr)
+            print("  Windows       :  py lmstudio-monitor.py --help", file=sys.stderr)
+            sys.exit(1)
+    else:
+        print("", file=sys.stderr)
+        print("No se pudo instalar 'rich' automaticamente. Instalalo manualmente:", file=sys.stderr)
+        print("  Linux / macOS :  pip3 install rich   (o: python3 -m pip install rich)", file=sys.stderr)
+        print("  Windows       :  py -m pip install rich", file=sys.stderr)
+        print("                   (si 'py' no funciona, prueba: python -m pip install rich)", file=sys.stderr)
+        print("  Si falta pip  :  py -m ensurepip --upgrade", file=sys.stderr)
+        print("                   py -m pip install rich", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("Tambien puedes usar requirements.txt:", file=sys.stderr)
+        print("  py -m pip install -r requirements.txt", file=sys.stderr)
+        sys.exit(1)
 
 # =============================================================================
 # CONFIGURACIÓN DE THEMES
@@ -95,8 +163,77 @@ SIMBOLOS = {
 # CONSTANTES
 # =============================================================================
 
-# Ruta por defecto donde se almacenan los logs del servidor
-RUTA_BASE_LOGS_DEFAULT = Path.home() / ".lmstudio" / "server-logs"
+# Ruta Linux por defecto donde se almacenan los logs del servidor
+RUTA_BASE_LOGS_LINUX = Path.home() / ".lmstudio" / "server-logs"
+
+# Ruta Windows por defecto donde se almacenan los logs del servidor
+# (equivale a C:\Users\<usuario>\.lmstudio\apps\bionic\server-logs)
+RUTA_BASE_LOGS_WINDOWS = Path.home() / ".lmstudio" / "apps" / "bionic" / "server-logs"
+
+# Compatibilidad hacia atrás: antes solo existía la ruta Linux hardcodeada.
+RUTA_BASE_LOGS_DEFAULT = RUTA_BASE_LOGS_LINUX
+
+
+def detectar_ruta_base() -> Path:
+    """
+    Detecta automáticamente qué directorio base de logs utilizar.
+
+    Orden de preferencia:
+      1. Si solo uno de los dos existe, devuelve ese.
+      2. Si existen ambos, devuelve el que contenga el *.log más reciente.
+      3. Si ninguno existe, devuelve el default según el SO actual
+         (Windows -> ruta Windows, resto -> ruta Linux).
+
+    Returns:
+        Path: Ruta base de logs detectada.
+    """
+    linux_existe = RUTA_BASE_LOGS_LINUX.exists()
+    windows_existe = RUTA_BASE_LOGS_WINDOWS.exists()
+
+    if linux_existe and not windows_existe:
+        return RUTA_BASE_LOGS_LINUX
+    if windows_existe and not linux_existe:
+        return RUTA_BASE_LOGS_WINDOWS
+    if linux_existe and windows_existe:
+        try:
+            logs_linux = list(RUTA_BASE_LOGS_LINUX.rglob("*.log"))
+            logs_windows = list(RUTA_BASE_LOGS_WINDOWS.rglob("*.log"))
+            if logs_linux and not logs_windows:
+                return RUTA_BASE_LOGS_LINUX
+            if logs_windows and not logs_linux:
+                return RUTA_BASE_LOGS_WINDOWS
+            if logs_linux and logs_windows:
+                ultimo_linux = max(p.stat().st_mtime for p in logs_linux)
+                ultimo_windows = max(p.stat().st_mtime for p in logs_windows)
+                return RUTA_BASE_LOGS_WINDOWS if ultimo_windows >= ultimo_linux else RUTA_BASE_LOGS_LINUX
+        except OSError:
+            pass
+        # Ambos existen pero sin logs (o error leyendo): preferir el nativo del SO.
+        return RUTA_BASE_LOGS_WINDOWS if os.name == "nt" else RUTA_BASE_LOGS_LINUX
+
+    # Ninguno existe: devolver el nativo del SO para que el error sea claro.
+    return RUTA_BASE_LOGS_WINDOWS if os.name == "nt" else RUTA_BASE_LOGS_LINUX
+
+
+def resolver_ruta_base(plataforma: str = "auto", logs_dir: str | Path | None = None) -> Path:
+    """
+    Resuelve el directorio base de logs según plataforma y/o ruta personalizada.
+
+    Args:
+        plataforma: 'auto' (detectar), 'linux' o 'windows' ('win' como alias).
+        logs_dir: Ruta personalizada (tiene máxima prioridad, equivale a --logs-dir).
+
+    Returns:
+        Path: Directorio base de logs a utilizar.
+    """
+    if logs_dir:
+        return Path(logs_dir)
+    p = (plataforma or "auto").lower()
+    if p == "linux":
+        return RUTA_BASE_LOGS_LINUX
+    if p in ("windows", "win"):
+        return RUTA_BASE_LOGS_WINDOWS
+    return detectar_ruta_base()
 
 
 def estado_inicial() -> dict:
@@ -347,7 +484,7 @@ def obtener_theme(nombre: str = None) -> dict:
 # FUNCIONES DE BÚSQUEDA Y PARSING
 # =============================================================================
 
-def buscar_ultimo_log(ruta_base: Path = RUTA_BASE_LOGS_DEFAULT) -> Path:
+def buscar_ultimo_log(ruta_base: Path | None = None) -> Path:
     """
     Busca y devuelve la ruta al archivo de log más reciente.
 
@@ -356,12 +493,16 @@ def buscar_ultimo_log(ruta_base: Path = RUTA_BASE_LOGS_DEFAULT) -> Path:
 
     Args:
         ruta_base: Directorio raíz donde buscar los logs.
+                   Si es None, se autodetecta (ver detectar_ruta_base()).
 
     Returns:
         Path: Ruta al archivo de log más reciente encontrado.
               Si no se encuentra ningún log, devuelve una ruta por defecto
               para el día actual (que puede no existir).
     """
+    if ruta_base is None:
+        ruta_base = detectar_ruta_base()
+    ruta_base = Path(ruta_base)
     ahora = datetime.now()
 
     # 1. Intentar encontrar log del día actual
@@ -746,36 +887,62 @@ def principal():
     if "--help" in sys.argv or "-h" in sys.argv:
         consola.print("[bold]LMStudio Monitor[/bold] — Panel de control TUI en tiempo real de logs de LMStudio")
         consola.print()
-        consola.print("Uso: python3 lmstudio-monitor.py")
+        consola.print("Uso: python3 lmstudio-monitor.py [opciones]")
         consola.print()
         consola.print("Opciones:")
         consola.print("  --help, -h         Mostrar esta ayuda")
         consola.print("  --interval N       Intervalo de actualización en segundos (default: 2)")
         consola.print("  --file PATH        Archivo de log específico a monitorear")
-        consola.print(f"  --logs-dir DIR     Directorio raíz de logs (default: {RUTA_BASE_LOGS_DEFAULT})")
+        consola.print("  --platform PLAT    Plataforma de logs: auto (default), linux o windows")
+        consola.print("                     linux   -> ~/.lmstudio/server-logs")
+        consola.print("                     windows -> ~/.lmstudio/apps/bionic/server-logs")
+        consola.print("                                (p. ej. C:\\Users\\<usuario>\\.lmstudio\\apps\\bionic\\server-logs)")
+        consola.print("  --logs-dir DIR     Directorio raíz de logs personalizado (tiene prioridad")
+        consola.print("                     sobre --platform; útil para una ruta nueva cualquiera)")
         consola.print(f"  --theme THEME      Theme de colores (disponibles: {', '.join(THEMES.keys())})")
+        consola.print()
+        consola.print("Detección automática (--platform auto, por defecto):")
+        consola.print("  Elige la ruta existente; si existen ambas, la del *.log más reciente;")
+        consola.print("  si no existe ninguna, usa la nativa del SO actual.")
+        consola.print()
+        consola.print("Ejemplos:")
+        consola.print("  python3 lmstudio-monitor.py                              # autodetectar")
+        consola.print("  python3 lmstudio-monitor.py --platform windows           # forzar ruta Windows")
+        consola.print("  python3 lmstudio-monitor.py --platform linux             # forzar ruta Linux")
+        consola.print("  python3 lmstudio-monitor.py --logs-dir /ruta/nueva/logs # ruta personalizada")
         consola.print()
         consola.print(f"  Theme por defecto: {THEME_ACTUAL}")
         sys.exit(0)
 
+    def _obtener_valor(*nombres):
+        for i, arg in enumerate(sys.argv):
+            if arg in nombres and i + 1 < len(sys.argv):
+                return sys.argv[i + 1]
+        return None
+
     # Parsear argumentos de línea de comandos
     intervalo = 2
-    for i, arg in enumerate(sys.argv):
-        if arg == "--interval" and i + 1 < len(sys.argv):
-            intervalo = float(sys.argv[i + 1])
+    valor_intervalo = _obtener_valor("--interval")
+    if valor_intervalo is not None:
+        intervalo = float(valor_intervalo)
 
-    archivo_fijo = None
-    for i, arg in enumerate(sys.argv):
-        if arg == "--file" and i + 1 < len(sys.argv):
-            archivo_fijo = Path(sys.argv[i + 1])
+    valor_file = _obtener_valor("--file")
+    archivo_fijo = Path(valor_file) if valor_file else None
 
-    ruta_logs = RUTA_BASE_LOGS_DEFAULT
-    for i, arg in enumerate(sys.argv):
-        if arg == "--logs-dir" and i + 1 < len(sys.argv):
-            ruta_logs = Path(sys.argv[i + 1])
-            if not ruta_logs.exists():
-                consola.print(f"[bold red]Error:[/bold red] Directorio '{ruta_logs}' no existe.")
-                sys.exit(1)
+    plataforma = _obtener_valor("--platform", "--os") or "auto"
+    if plataforma.lower() not in ("auto", "linux", "windows", "win"):
+        consola.print(f"[bold red]Error:[/bold red] Plataforma '{plataforma}' no válida.")
+        consola.print("Valores válidos: auto, linux, windows")
+        sys.exit(1)
+
+    valor_logs_dir = _obtener_valor("--logs-dir", "--log-dir", "--ruta", "--path")
+    if valor_logs_dir:
+        ruta_logs = Path(valor_logs_dir)
+        if not ruta_logs.exists():
+            consola.print(f"[bold red]Error:[/bold red] Directorio '{ruta_logs}' no existe.")
+            sys.exit(1)
+    else:
+        ruta_logs = resolver_ruta_base(plataforma)
 
     theme_nombre = THEME_ACTUAL
     for i, arg in enumerate(sys.argv):
@@ -791,7 +958,8 @@ def principal():
     theme = obtener_theme(theme_nombre)
     archivo_log = archivo_fijo if archivo_fijo else buscar_ultimo_log(ruta_logs)
 
-    consola.print(f"[bold {theme['terciario']}]Monitor iniciado[/bold {theme['terciario']}] — Theme: {theme_nombre}")
+    consola.print(f"[bold {theme['terciario']}]Monitor iniciado[/bold {theme['terciario']}] — Theme: {theme_nombre} — Platform: {plataforma.lower()}")
+    consola.print(f"[{theme['apagado']}]Logs: {ruta_logs}[/{theme['apagado']}]")
     consola.print(f"[{theme['apagado']}]Presiona q para salir[/{theme['apagado']}]")
     time.sleep(1)
 
