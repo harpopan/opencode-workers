@@ -1,62 +1,17 @@
-# LMStudio Log Monitor — Documentación para Desarrolladores
+# LMStudio Monitor — Documentación Técnica
 
-Panel de control TUI en tiempo real para monitorear los logs del servidor LMStudio.
+Panel de control TUI en tiempo real para monitorear los logs del servidor
+LMStudio, implementado en Python con la biblioteca `rich`.
 
 ## Instalación
 
 ### Requisitos previos
 
 - Python 3.10 o superior
-- Biblioteca `rich` (normalmente preinstalada en sistemas Linux)
+- Biblioteca `rich`
 
 ```bash
-# Instalar dependencias (si no están disponibles)
 pip install rich
-```
-
-### Configuración
-
-El script se encuentra en:
-
-```
-~/.lmstudio/lmstudio-monitor.py
-```
-
-## Uso
-
-### Ejecución básica
-
-```bash
-python3 ~/.lmstudio/lmstudio-monitor.py
-```
-
-### Parámetros de línea de comandos
-
-| Parámetro | Descripción | Valor por defecto |
-|-----------|-------------|-------------------|
-| `--interval N` | Intervalo de actualización en segundos | `2` |
-| `--file PATH` | Ruta a un archivo de log específico | Auto-detecta |
-| `--logs-dir DIR` | Directorio raíz de logs | `~/.lmstudio/server-logs` |
-| `--theme THEME` | Theme de colores (dracula, nord, minimalista) | `dracula` |
-| `--help, -h` | Muestra la ayuda | — |
-
-### Ejemplos
-
-```bash
-# Ejecutar con actualización cada 5 segundos
-python3 ~/.lmstudio/lmstudio-monitor.py --interval 5
-
-# Monitorizar un archivo de log específico
-python3 ~/.lmstudio/lmstudio-monitor.py --file ~/.lmstudio/server-logs/2026-09/2026-09-08.1.log
-
-# Ejecutar con directorio de logs personalizado
-python3 ~/.lmstudio/lmstudio-monitor.py --logs-dir /ruta/personalizada/server-logs
-
-# Ejecutar con theme Nord
-python3 ~/.lmstudio/lmstudio-monitor.py --theme nord
-
-# Ejecutar en segundo plano
-nohup python3 ~/.lmstudio/lmstudio-monitor.py > /dev/null 2>&1 &
 ```
 
 ## Arquitectura
@@ -70,7 +25,7 @@ lmstudio-monitor.py
 │   ├── THEMES                # Paletas de colores predefinidas
 │   └── SIMBOLOS             # Símbolos Unicode para la interfaz
 ├── Constantes
-│   ├── RUTA_BASE_LOGS       # Ruta raíz de logs
+│   ├── RUTA_BASE_LOGS_DEFAULT  # Ruta raíz de logs
 │   └── PATRONES             # Expresiones regulares para parsing
 ├── Funciones
 │   ├── estado_inicial()     # Devuelve diccionario de estado inicial
@@ -82,12 +37,57 @@ lmstudio-monitor.py
 └── principal()              # Punto de entrada
 ```
 
+### Flujo de ejecución
+
+1. **Inicialización**: se parsean los argumentos, se localiza el archivo de log
+   y se crea una instancia de `LectorLog`.
+2. **Bucle principal**: cada `intervalo` segundos:
+   - Se busca si hay un nuevo archivo de log (rotación diaria).
+   - Se leen solo las líneas nuevas del archivo (tailing incremental).
+   - Se actualiza el estado acumulado con las nuevas líneas.
+   - Se construye y actualiza el panel visual.
+3. **Terminación**: se cierra al presionar `q` o `Ctrl+C`.
+
+### Clase LectorLog
+
+La clase `LectorLog` gestiona la lectura incremental de archivos de log y es la
+pieza central del monitor:
+
+```python
+class LectorLog:
+    def __init__(self):
+        self.ruta = None          # Ruta del archivo actual
+        self.offset = 0           # Posición de lectura (bytes)
+        self.estado = estado_inicial()  # Estado acumulado
+        self.errores_recientes = []     # Últimos 5 errores
+        self.marca_tiempo = "-"         # Última marca de tiempo
+
+    def leer_nuevas_lineas(self, ruta_archivo: Path) -> list:
+        # Lee solo líneas nuevas desde self.offset
+        # Resetea el estado si el archivo cambió
+        ...
+
+    def actualizar_estado(self, lineas: list) -> dict:
+        # Procesa líneas nuevas y actualiza self.estado
+        ...
+```
+
+**Características principales:**
+
+- **Tailing incremental**: usa `seek()` para leer solo desde la última posición
+  conocida, sin releer el archivo completo en cada ciclo.
+- **Detección de rotación**: resetea el estado cuando cambia la ruta del archivo.
+- **Acumulación de estado**: mantiene el estado entre iteraciones sin
+  reconstruirlo desde cero.
+- **Manejo de errores**: si el archivo no existe, marca `error_lectura` en el
+  estado (sin crashear) y el bucle principal muestra un panel de espera.
+
 ## Sistema de themes
 
 ### Themes disponibles
 
 | Theme | Estilo | Colores principales |
-|-------|--------|---------------------|
+| --- | --- | --- |
 | `dracula` | Vibrante sobre fondo oscuro | Púrpura, cyan, verde |
 | `nord` | Frío y profesional | Azules, cyan, verdes |
 | `minimalista` | Limpio y neutro | Grises con acento azul |
@@ -130,7 +130,7 @@ SIMBOLOS = {
 
 ### Crear un theme personalizado
 
-Para crear un nuevo theme, añadir una entrada al diccionario `THEMES`:
+Añadir una entrada al diccionario `THEMES`:
 
 ```python
 THEMES["mi_theme"] = {
@@ -162,51 +162,13 @@ Editar la línea al inicio del script:
 THEME_ACTUAL = "mi_theme"  # Cambiar aquí el theme por defecto
 ```
 
-### Flujo de ejecución
+## Parsing de logs
 
-1. **Inicialización**: Se parsean los argumentos, se localiza el archivo de log y se crea una instancia de `LectorLog`
-2. **Bucle principal**: Cada `intervalo` segundos:
-   - Se busca si hay un nuevo archivo de log (rotación diaria)
-   - Se leen solo las líneas nuevas del archivo (tailing incremental)
-   - Se actualiza el estado acumulado con las nuevas líneas
-   - Se construye y actualiza el panel visual
-3. **Terminación**: Se cierra al presionar `q` o `Ctrl+C`
-
-### Clase LectorLog
-
-La clase `LectorLog` gestiona la lectura incremental de archivos de log:
-
-```python
-class LectorLog:
-    def __init__(self):
-        self.ruta = None          # Ruta del archivo actual
-        self.offset = 0           # Posición de lectura (bytes)
-        self.estado = estado_inicial()  # Estado acumulado
-        self.errores_recientes = []     # Últimos 5 errores
-        self.marca_tiempo = "-"         # Última marca de tiempo
-
-    def leer_nuevas_lineas(self, ruta_archivo: Path) -> list:
-        # Lee solo líneas nuevas desde self.offset
-        # Resetea si el archivo cambió
-        ...
-
-    def actualizar_estado(self, lineas: list) -> dict:
-        # Procesa líneas nuevas y actualiza self.estado
-        ...
-```
-
-**Características principales:**
-- **Tailing incremental**: Usa `seek()` para leer solo desde la última posición conocida
-- **Detección de rotación**: Resetea el estado cuando cambia la ruta del archivo
-- **Acumulación de estado**: Mantiene el estado entre iteraciones sin reconstruirlo
-- **Manejo de errores**: Devuelve `error_lectura` si el archivo no existe
-
-### Parsing de logs
-
-El sistema de parsing utiliza expresiones regulares definidas en `PATRONES` para extraer información clave:
+El sistema de parsing utiliza expresiones regulares definidas en `PATRONES`
+para extraer información clave:
 
 | Patrón | Descripción | Datos extraídos |
-|--------|-------------|-----------------|
+| --- | --- | --- |
 | `servidor_iniciado` | Inicio del servidor | — |
 | `servidor_detenido` | Detención del servidor | — |
 | `servidor_escuchando` | Puerto de escucha | Puerto |
@@ -223,7 +185,11 @@ El sistema de parsing utiliza expresiones regulares definidas en `PATRONES` para
 | `peticion_recibida` | Nueva petición | Método, endpoint |
 | `error` | Errores detectados | Línea de error |
 
-### Modelo de datos
+> Nota: el patrón `evaluacion_generacion` usa un *lookbehind* negativo
+> (`(?<!prompt )`) para no colisionar con `evaluacion_prompt`, y el patrón
+> `error` es `r"ERROR|error|failed"` con `re.IGNORECASE`.
+
+## Modelo de datos
 
 El estado del servidor se almacena en un diccionario con las siguientes claves:
 
@@ -311,27 +277,20 @@ estado = {
 ### Secciones del panel
 
 | Sección | Contenido |
-|---------|-----------|
-| **Servidor** | Estado (activo/detenido/desconocido), puerto, última petición, endpoint |
+| --- | --- |
+| **Servidor** | Estado, puerto, última petición, endpoint |
 | **Modelo** | Nombre, archivo GGUF, slots, contexto por slot |
-| **Procesamiento de Prompt** | Barra de progreso, tokens procesados, velocidad |
+| **Procesamiento de Prompt** | Barra de progreso, tokens, velocidad |
 | **Generación** | Tokens generados, velocidad tok/s |
-| **Última Petición** | Tokens de prompt, tokens de generación, tiempo total |
+| **Última Petición** | Tokens de prompt, generación, tiempo total |
 | **Errores** | Últimos 5 errores con marca de tiempo |
-
-### Atajos de teclado
-
-| Tecla | Acción |
-|-------|--------|
-| `q` | Salir del monitor |
-| `Ctrl+C` | Forzar salida |
 
 ## Desarrollo
 
 ### Dependencias
 
 - Python 3.10+
-- `rich` — Biblioteca para interfaces de terminal enriquecidas
+- `rich`
 
 ### Extensión de patrones
 
@@ -354,15 +313,12 @@ if coincidencia:
 
 ### Añadir nuevas secciones al panel
 
-Para añadir una nueva sección visual:
-
-1. Crear una tabla Rich en `construir_panel()`
+1. Crear una tabla Rich en `construir_panel()`.
 2. Usar los colores del theme: `theme['primario']`, `theme['secundario']`, etc.
-3. Usar los símbolos de `SIMBOLOS` para mantener consistencia
-4. Añadirla al layout correspondiente
-5. Actualizar el modelo de datos en `estado_inicial()` y el parsing en `LectorLog.actualizar_estado()`
-
-Ejemplo:
+3. Usar los símbolos de `SIMBOLOS` para mantener consistencia.
+4. Añadirla al layout correspondiente.
+5. Actualizar el modelo de datos en `estado_inicial()` y el parsing en
+   `LectorLog.actualizar_estado()`.
 
 ```python
 # Crear tabla con colores del theme
@@ -379,32 +335,41 @@ layout["seccion"].split_row(
 )
 ```
 
+## Historial de correcciones
+
+Resultado de una revisión de código (2026-09-09), ya implementada en el script:
+
+1. **Colisión de regex prompt/generación** (crítico): el patrón
+   `evaluacion_generacion` ahora usa lookbehind negativo `(?<!prompt )` para no
+   capturar las líneas de "prompt eval time".
+2. **Crash si el log no existe** (alto): el lector devuelve siempre el estado
+   completo y marca `error_lectura`; el bucle principal muestra un panel de
+   espera en lugar de cerrarse con `KeyError`.
+3. **Tailing incremental** (alto): se mantiene el estado acumulado y se lee con
+   `seek()` solo lo nuevo, evitando releer el archivo completo cada tick.
+4. **Duplicación de líneas cabecera/cola** (medio): resuelta de forma natural
+   por el tailing incremental.
+5. **Regex de `error`** (bajo): simplificada a `r"ERROR|error|failed"` con
+   `re.IGNORECASE`, eliminando la heurística de estilo logcat.
+
 ## Solución de problemas
 
 ### El monitor no encuentra logs
-
-Verificar que existe la ruta por defecto:
 
 ```bash
 ls -la ~/.lmstudio/server-logs/
 ```
 
-Si los logs están en otra ubicación, usar el parámetro `--logs-dir`:
-
-```bash
-python3 lmstudio-monitor.py --logs-dir /ruta/personalizada/server-logs
-```
-
-### Errores de codificación
-
-El script maneja automáticamente errores de codificación con `errors="replace"`.
+Si están en otra ubicación, usar `--logs-dir`.
 
 ### Rendimiento
 
-- **Tailing incremental**: El monitor solo lee las líneas nuevas del archivo de log en cada iteración, sin releer el archivo completo. Esto es eficiente incluso para logs de varios MB.
-- **Detección de rotación**: Si el archivo de log cambia (rotación diaria), el monitor resetea automáticamente y comienza a leer desde el principio del nuevo archivo.
-- **Gestión de errores**: Si el archivo de log no existe, el monitor muestra un aviso y espera a que el archivo esté disponible, sin cerrarse.
-- El intervalo de actualización por defecto (2s) es equilibrado para la mayoría de casos
+- **Tailing incremental**: solo se leen las líneas nuevas, eficiente incluso con
+  logs de varios MB.
+- **Detección de rotación**: al cambiar el archivo (rotación diaria), se resetea
+  y empieza a leer desde el principio del nuevo archivo.
+- **Gestión de errores**: si el log no existe, muestra un aviso y espera a que
+  esté disponible sin cerrarse.
 
 ## Licencia
 
