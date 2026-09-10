@@ -1,4 +1,4 @@
-# Configurador automático de opencode.jsonc para LMStudio
+﻿# Configurador automático de opencode.jsonc para LMStudio
 # Permite elegir entre varios "proveedores" (máquinas de desarrollo local
 # con LMStudio desplegado), detecta sus modelos disponibles y genera
 # opencode.jsonc apuntando al que se seleccione.
@@ -18,14 +18,23 @@ param(
     [switch]$Ayuda
 )
 
+# Forzar UTF-8 en consola (evita simbolos raros y acentos rotos en Windows PowerShell 5.1)
+# Requiere ademas guardar este .ps1 como UTF-8 con BOM.
+try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+    if ($PSVersionTable.PSVersion.Major -lt 6) { chcp 65001 > $null }
+} catch { }
+
 $CONFIG_FILE = Join-Path (Get-Location) "opencode.jsonc"
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Proveedores conocidos: "Nombre|URL_BASE"
 # Edita esta lista para añadir tus máquinas de desarrollo.
 # También se puede añadir/mantener en ~/.config/opencode/providers.conf
 # (una línea "Nombre|URL" por proveedor); si existe, se añade a esta lista.
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 $Proveedores = @(
     "Local|http://localhost:1234"
     "ScacNet|http://scacnet.cacsa.eu:1234"
@@ -42,9 +51,9 @@ if (Test-Path $ArchivoProveedores) {
     }
 }
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Utilidades
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 $NombreScript = [System.IO.Path]::GetFileName($PSCommandPath)
 
@@ -102,9 +111,9 @@ if ($Listar) {
 Write-Host "=== Configurador OpenCode + LMStudio ==="
 Write-Host ""
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # 1. Selección de proveedor
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 $NombreProveedor = ""
 
 if ($env:LMSTUDIO_URL) {
@@ -183,9 +192,9 @@ if (-not $ClaveProveedor) {
 }
 Write-Host ""
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # 2. Verificar conexión con LMStudio
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 Write-Host "2. Verificando conexión con LMStudio en $LMSTUDIO_URL ..."
 
 try {
@@ -222,9 +231,9 @@ catch {
 Write-Host "   [OK] Conectado" -ForegroundColor Green
 Write-Host ""
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # 3. Obtener modelos de chat disponibles (se excluyen embeddings)
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 $Models = @(
     $ModelsResponse.data |
@@ -266,9 +275,9 @@ $DefaultModel = $Models[0]
 Write-Host "4. Modelo por defecto: $DefaultModel"
 Write-Host ""
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # 4. Generar el JSONC
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 Write-Host "5. Generando configuración en $CONFIG_FILE ..."
 
 if (Test-Path $CONFIG_FILE) {
@@ -368,9 +377,9 @@ catch {
 Write-Host "   [OK] Configuración generada" -ForegroundColor Green
 Write-Host ""
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # 5. Resumen
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 Write-Host "6. Contenido del archivo:"
 Write-Host "-------------------------------------"
 
