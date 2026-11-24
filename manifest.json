@@ -1,0 +1,15 @@
+{
+  "name": "opencod-workers",
+  "short_name": "OpenCode Workers",
+  "description": "Recopilatorio de Agentes y Skills para OpenCode",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1e1e1e",
+  "theme_color": "#1e1e1e",
+  "lang": "es-ES",
+  "icons": [],
+
+  "stack": "AGENTS",
+  "enlacedocvivero": ""
+}
